@@ -17,9 +17,8 @@ lorem ipsum
 ## Constants
 
 Minimum sizes:
-- `PASS_SIZE`: depends on mountain size
+- `VALLEY_SIZE`: depends on mountain size
 - `MOUNTAIN_SIZE`
-- `VALLEY_SIZE`: same as pass_size
 
 
 ## Pseudocode
@@ -35,7 +34,7 @@ struct Peak {
 
 enum PeakType {
     Mountain(Peak),
-    Pass(Peak, Peak)
+    Valley(Peak, Peak)
 }
 
 generate_peaks(\todo) -> vec[PeakType]
