@@ -29,7 +29,8 @@ param_check(min_mountains, passes, valleys)
 
 struct Peak {
     x: usize,
-    y: usize
+    y: usize,
+    elevation: usize
 }
 
 enum PeakType {
@@ -38,5 +39,10 @@ enum PeakType {
 }
 
 generate_peaks(\todo) -> vec[PeakType]
+
+for peak in Peaks:
+    expand(Peak)
+
+populate()
 
 ```
