@@ -20,6 +20,10 @@ enum PeakType<'a> {
     Pass(&'a Peak, &'a Peak)
 }
 
+fn display_world () {
+
+}
+
 fn main() {
     //TODO
 }
