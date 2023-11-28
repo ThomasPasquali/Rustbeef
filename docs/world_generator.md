@@ -41,7 +41,7 @@ enum PeakType {
 generate_peaks(\todo) -> vec[PeakType]
 
 for peak in Peaks:
-    expand(Peak)
+    expand(PeakType)
 
 populate()
 
