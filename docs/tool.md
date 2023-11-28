@@ -1,10 +1,10 @@
-## Never lost again compass
+# Never lost again compass
 
-Inputs:
+## Inputs:
 - TypeType or Content: final destination
 
 
-Methods:
+## Methods:
 - get_move() -> Option<Direction>
 while let Some(direction) = get_move() {
     interface::go.(direction)
