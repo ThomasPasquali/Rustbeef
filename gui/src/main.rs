@@ -144,14 +144,17 @@ fn render_world(world: &World, textures: &Vec<mq::Texture2D>) {
         for (col, col_v) in row_v.iter().enumerate() {
             for height in 0..col_v.elevation {
                 match col_v.tile_type {
-                    Grass => {
-                        render_cube(col, height, row, &textures[0]);
+                    ShallowWater => {
+                        render_cube(col, height, row, &textures[2]);
                     }
                     Sand => {
                         render_cube(col, height, row, &textures[1]);
-                    }
+                    },
+                    Grass => {
+                        render_cube(col, height, row, &textures[0]);
+                    },
                     _ => {
-                        
+                        render_cube(col, height, row, &textures[0]);
                     }
                 }
             }
