@@ -1,6 +1,7 @@
 use std::any::TypeId;
 
 use macroquad::prelude as mq;
+use macroquad::texture::Texture2D;
 use robotics_lib::interface::Tools;
 use robotics_lib::world::tile::TileType::*;
 use robotics_lib::world::{worldgenerator::Generator, World};
@@ -141,32 +142,28 @@ async fn main() {
 fn render_world(world: &World, textures: &Vec<mq::Texture2D>) {
     for (row, row_v) in world.map.iter().enumerate() {
         for (col, col_v) in row_v.iter().enumerate() {
-            match col_v.tile_type {
-                Grass => {
-                    mq::draw_cube(
-                        mq::vec3(col as f32, col_v.elevation as f32, row as f32),
-                        mq::vec3(1., 1., 1.),
-                        Some(&textures[0]),
-                        mq::WHITE,
-                    );
-                }
-                Sand => {
-                    mq::draw_cube(
-                        mq::vec3(col as f32, col_v.elevation as f32, row as f32),
-                        mq::vec3(1., 1., 1.),
-                        Some(&textures[1]),
-                        mq::WHITE,
-                    );
-                }
-                _ => {
-                    mq::draw_cube(
-                        mq::vec3(col as f32, col_v.elevation as f32, row as f32),
-                        mq::vec3(1., 1., 1.),
-                        Some(&textures[2]),
-                        mq::WHITE,
-                    );
+            for height in 0..col_v.elevation {
+                match col_v.tile_type {
+                    Grass => {
+                        render_cube(col, height, row, &textures[0]);
+                    }
+                    Sand => {
+                        render_cube(col, height, row, &textures[1]);
+                    }
+                    _ => {
+                        
+                    }
                 }
             }
         }
     }
+}
+
+fn render_cube(x: usize, y: usize, z: usize, texture: &Texture2D) {
+    mq::draw_cube(
+        mq::vec3(x as f32, y as f32, z as f32),
+        mq::vec3(1., 1., 1.),
+        Some(texture),
+        mq::WHITE,
+    );
 }
