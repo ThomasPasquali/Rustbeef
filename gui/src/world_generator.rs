@@ -9,7 +9,7 @@ use strum::IntoEnumIterator;
 
 pub struct WorldGenerator {}
 
-const MAP_SIZE: usize = 20;
+const MAP_SIZE: usize = 50;
 
 impl Generator for WorldGenerator {
     fn gen(&mut self) -> (Vec<Vec<Tile>>, (usize, usize), EnvironmentalConditions, f32) {

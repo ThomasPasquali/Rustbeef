@@ -24,6 +24,10 @@ impl Tools for DumbTool {
         TypeId::of::<DumbTool>()
     }
 }
+#[test]
+fn test_main(){
+    main();
+}
 
 #[macroquad::main("Rustbeef")]
 async fn main() {
@@ -55,9 +59,14 @@ async fn main() {
     let (world, spawn, conditions, score) = WorldGenerator {}.gen();
     let mut world = World::new(world, conditions, tools, 10.0);
 
-    let bumpiness = 3;
-    let scale = 100.0;
-    height::bump_world(&mut world, bumpiness, scale);
+    let bumpiness = 100;
+    let scale = 10.0;
+    let interpolation = 1.0;
+    let stretch = 3.0;
+    let wideness = 2.0;
+
+    let height_map = height::create_height_map(world.dimension, bumpiness, scale, interpolation, stretch, wideness);
+    height::bump_world(&mut world, height_map);
 
     
     let textures = vec![
@@ -141,20 +150,21 @@ async fn main() {
 
 fn render_world(world: &World, textures: &Vec<mq::Texture2D>) {
     for (row, row_v) in world.map.iter().enumerate() {
-        for (col, col_v) in row_v.iter().enumerate() {
-            for height in 0..col_v.elevation {
-                match col_v.tile_type {
+        for (col, tile) in row_v.iter().enumerate() {
+            for elevation in 0..=tile.elevation{
+                match tile.tile_type {
                     ShallowWater => {
-                        render_cube(col, height, row, &textures[2]);
+                        // render_cube(row, col, tile.elevation, &textures[2]);
+                        render_cube(row, elevation, col, &textures[2]);
                     }
                     Sand => {
-                        render_cube(col, height, row, &textures[1]);
+                        render_cube(row, elevation, col, &textures[1]);
                     },
                     Grass => {
-                        render_cube(col, height, row, &textures[0]);
+                        render_cube(row,elevation, col, &textures[0]);
                     },
                     _ => {
-                        render_cube(col, height, row, &textures[0]);
+                        render_cube(row, elevation, col, &textures[0]);
                     }
                 }
             }
