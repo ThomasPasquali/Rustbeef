@@ -12,7 +12,7 @@ pub struct WorldGenerator {}
 const MAP_SIZE: usize = 20;
 
 impl Generator for WorldGenerator {
-    fn gen(&mut self) -> (Vec<Vec<Tile>>, (usize, usize), EnvironmentalConditions) {
+    fn gen(&mut self) -> (Vec<Vec<Tile>>, (usize, usize), EnvironmentalConditions, f32) {
         let mut rng = rand::thread_rng();
         let mut world = Vec::new();
         for _ in 0..MAP_SIZE {
@@ -31,6 +31,7 @@ impl Generator for WorldGenerator {
             world,
             (0, 0),
             EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1),
+            10.0
         )
     }
 }

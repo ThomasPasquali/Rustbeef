@@ -1,4 +1,7 @@
+use std::any::TypeId;
+
 use macroquad::prelude as mq;
+use robotics_lib::interface::Tools;
 use robotics_lib::world::tile::TileType::*;
 use robotics_lib::world::{worldgenerator::Generator, World};
 use world_generator::WorldGenerator;
@@ -8,6 +11,16 @@ mod world_generator;
 const TILE_SIZE: u32 = 32;
 const MOVE_SPEED: f32 = 0.1;
 const LOOK_SPEED: f32 = 0.1;
+
+struct DumbTool {}
+impl Tools for DumbTool {
+    fn check(&self, world: &mut World) -> Result<(), robotics_lib::utils::LibError> {
+        Ok(())
+    }
+    fn id(&self) -> TypeId {
+        TypeId::of::<DumbTool>()
+    }
+}
 
 #[macroquad::main("Rustbeef")]
 async fn main() {
@@ -35,8 +48,9 @@ async fn main() {
     mq::set_cursor_grab(grabbed);
     mq::show_mouse(false);
 
-    let (world, spawn, conditions) = WorldGenerator {}.gen();
-    let world = World::new(world, conditions);
+    let tools: Vec<DumbTool> = Vec::new();
+    let (world, spawn, conditions, score) = WorldGenerator {}.gen();
+    let world = World::new(world, conditions, tools, 10.0);
     let textures = vec![
         mq::Texture2D::from_file_with_format(include_bytes!("../assets/grass.png"), None),
         mq::Texture2D::from_file_with_format(include_bytes!("../assets/sand.png"), None),
