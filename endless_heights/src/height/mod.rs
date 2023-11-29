@@ -1,7 +1,9 @@
 use std::fmt::Display;
+use crate::utils::*;
 
 use rand_distr::{Uniform, Distribution};
 use rand::{Rng, thread_rng};
+use robotics_lib::world::World;
 
 
 const DEFAULT_SIZE: usize = 10;
@@ -9,17 +11,7 @@ const WORLD_DIMENSION: Dimension = Dimension{ width: DEFAULT_SIZE, height: DEFAU
 // const MIN_MOUNTAIN_SIZE: Dimension = Dimension{width: 30, height: 30};
 // const MIN_VALLEY_SIZE: Dimension = Dimension{width: 30, height: 30};
 
-pub struct Dimension {
-    width: usize,
-    height: usize
-}
-
-pub struct Position {
-    x: usize,
-    y: usize
-}
-
-pub struct ElevationTile {
+struct ElevationTile {
     pos: Position,
     elevation: usize,
     // expanded: bool
@@ -81,10 +73,10 @@ impl Default for Gaussian {
         Self { angle: 0.0, sigma_y: 1.0, sigma_x: 1.0, mean_y: 0.0, mean_x: 0.0, scale: 1.0 }
     }
 }
-pub fn create_height_map(hills: u32, scale: f32) -> HeightMap{
-    let mut gaussians = Vec::<Gaussian>::new();
+
+fn sample_gaussians(gaussians: &mut Vec<Gaussian>, bumpiness:u32, scale: f32){
     let mut rng = thread_rng();
-    for _ in [0..hills]{
+    for _ in [0..bumpiness]{
         let angle = std::f32::consts::PI * rng.gen_range(0.0..2.0);
         let uniform_sigma = Uniform::<f32>::from(1.0..10.0);
         let uniform_mean = Uniform::<f32>::from(0.0..DEFAULT_SIZE as f32);
@@ -97,6 +89,10 @@ pub fn create_height_map(hills: u32, scale: f32) -> HeightMap{
 
         gaussians.push(Gaussian::new(angle, sigma_y, sigma_x, mean_y, mean_x, sampled_scale));
     }
+}
+pub fn create_height_map(bumpiness: u32, scale: f32) -> HeightMap{
+    let mut gaussians = Vec::<Gaussian>::new();
+    sample_gaussians(&mut gaussians, bumpiness, scale);
 
     let mut height_map = height_map!(0; (WORLD_DIMENSION.width, WORLD_DIMENSION.height));
     for i in 0..DEFAULT_SIZE{
@@ -112,12 +108,24 @@ pub fn create_height_map(hills: u32, scale: f32) -> HeightMap{
     height_map
 }
 
+pub fn bump_world(world: &mut World, bumpiness: u32, scale: f32){
+    let mut gaussians = Vec::<Gaussian>::new();
+    sample_gaussians(&mut gaussians, bumpiness, scale);
+    for i in 0..world.dimension{
+        for j in 0..world.dimension{
+            let mut elevation: f32 = 0.0;
+            for gaussian in &gaussians{
+                elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
+            }
+            world.map[i][j].elevation = elevation.floor() as usize;
+        }
+    }
+}
+
 #[test]
 fn test_height_map_plot(){
     let display_hm = create_height_map(2, 100.0);
     print!("{}", display_hm);
 }
 
-fn main() {
-    //TODO
-}
+

@@ -5,6 +5,8 @@ use robotics_lib::interface::Tools;
 use robotics_lib::world::tile::TileType::*;
 use robotics_lib::world::{worldgenerator::Generator, World};
 use world_generator::WorldGenerator;
+use endless_heights::height;
+
 
 mod world_generator;
 
@@ -50,7 +52,13 @@ async fn main() {
 
     let tools: Vec<DumbTool> = Vec::new();
     let (world, spawn, conditions, score) = WorldGenerator {}.gen();
-    let world = World::new(world, conditions, tools, 10.0);
+    let mut world = World::new(world, conditions, tools, 10.0);
+
+    let bumpiness = 3;
+    let scale = 100.0;
+    height::bump_world(&mut world, bumpiness, scale);
+
+    
     let textures = vec![
         mq::Texture2D::from_file_with_format(include_bytes!("../assets/grass.png"), None),
         mq::Texture2D::from_file_with_format(include_bytes!("../assets/sand.png"), None),

@@ -9,4 +9,5 @@ edition = "2021"
 macroquad = "0.4.4"
 rand = "0.8.5"
 robotics_lib = { path = "../Robotic-Lib" }
+endless_heights = { path = "../endless_heights" }
 strum = "0.25.0"

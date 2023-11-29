@@ -22,7 +22,7 @@ impl Generator for WorldGenerator {
                     tile_type: TileType::from_repr(rng.gen_range(0..TileType::iter().len()))
                         .unwrap(),
                     content: Rock(0),
-                    elevation: rng.gen_range(0..=1),
+                    elevation: 0,
                 });
             }
             world.push(row);
