@@ -1,10 +1,10 @@
 use std::fmt::Display;
 use crate::utils::*;
+use crate::World;
+use crate::MAP_SIZE;
 
 use rand_distr::{Uniform, Distribution};
 use rand::{Rng, thread_rng};
-use robotics_lib::world::World;
-
 
 const DEFAULT_SIZE: usize = 10;
 const WORLD_DIMENSION: Dimension = Dimension{ width: DEFAULT_SIZE, height: DEFAULT_SIZE };
@@ -111,13 +111,13 @@ pub fn create_height_map(bumpiness: u32, scale: f32) -> HeightMap{
 pub fn bump_world(world: &mut World, bumpiness: u32, scale: f32){
     let mut gaussians = Vec::<Gaussian>::new();
     sample_gaussians(&mut gaussians, bumpiness, scale);
-    for i in 0..world.dimension{
-        for j in 0..world.dimension{
+    for i in 0..MAP_SIZE {
+        for j in 0..MAP_SIZE {
             let mut elevation: f32 = 0.0;
             for gaussian in &gaussians{
                 elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
             }
-            world.map[i][j].elevation = elevation.floor() as usize;
+            world[i][j].elevation = elevation.floor() as usize;
         }
     }
 }

@@ -1,7 +1,6 @@
 use bevy::{prelude as bv, hierarchy::BuildChildren, pbr::{self, AmbientLight}};
 use components::{camera::{camera_controller, CameraController}, cube::create_cube_mesh};
 
-mod world_generator;
 mod world_utils;
 mod components;
 #[test]
