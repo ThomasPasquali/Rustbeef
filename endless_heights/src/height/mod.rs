@@ -74,57 +74,97 @@ impl Default for Gaussian {
     }
 }
 
-fn sample_gaussians(gaussians: &mut Vec<Gaussian>, bumpiness:u32, scale: f32){
+fn sample_gaussians(gaussians: &mut Vec<Gaussian>, bumpiness: u32, scale: f32, limit: usize, stretch: f32, mut wideness: f32){
     let mut rng = thread_rng();
-    for _ in [0..bumpiness]{
+    for _ in 0..bumpiness{
         let angle = std::f32::consts::PI * rng.gen_range(0.0..2.0);
-        let uniform_sigma = Uniform::<f32>::from(1.0..10.0);
-        let uniform_mean = Uniform::<f32>::from(0.0..DEFAULT_SIZE as f32);
-        let uniform_scale = Uniform::<f32>::from(0.0..scale);
-        let sigma_x = uniform_sigma.sample(&mut rng);
-        let sigma_y = uniform_sigma.sample(&mut rng);
+        if stretch <= wideness{
+            wideness = stretch - 0.5
+        }
+        let uniform_sigma = Uniform::<f32>::from(wideness..stretch);
+        let uniform_mean = Uniform::<f32>::from(0.0..limit as f32);
         let mean_x = uniform_mean.sample(&mut rng);
         let mean_y = uniform_mean.sample(&mut rng);
-        let sampled_scale = uniform_scale.sample(&mut rng);
+        let sigma_x = uniform_sigma.sample(&mut rng);
+        let sigma_y = uniform_sigma.sample(&mut rng);
+        let mut sampled_scale: f32 = 1.0;
+        if scale > 1.0{
+            let uniform_scale = Uniform::<f32>::from(0.9..scale);
+            sampled_scale = uniform_scale.sample(&mut rng);
+        }
 
         gaussians.push(Gaussian::new(angle, sigma_y, sigma_x, mean_y, mean_x, sampled_scale));
     }
 }
-pub fn create_height_map(bumpiness: u32, scale: f32) -> HeightMap{
+pub fn create_height_map(size: usize, bumpiness: u32, scale: f32, interpolation: f32, stretch: f32, wideness: f32) -> HeightMap{
     let mut gaussians = Vec::<Gaussian>::new();
-    sample_gaussians(&mut gaussians, bumpiness, scale);
+    sample_gaussians(&mut gaussians, bumpiness, scale, size, stretch, wideness);
 
-    let mut height_map = height_map!(0; (WORLD_DIMENSION.width, WORLD_DIMENSION.height));
-    for i in 0..DEFAULT_SIZE{
-        for j in 0..DEFAULT_SIZE{
-            let mut elevation: f32 = 0.0;
+    let mut height_map = height_map!(0; (size, size));
+    let mut elevations = Vec::<usize>::new();
+    for i in 0..size{
+        for j in 0..size{
+            // let mut elevation: f32 = 0.0;
+            // for gaussian in &gaussians{
+            //     elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
+            // }
+            let mut elevation: usize = 0;
+            let mut gaussian_values = Vec::<usize>::new();
             for gaussian in &gaussians{
-                elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
+                // elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
+                gaussian_values.push(gaussian.get_value_at(i as f32, j as f32) as usize);
             }
-            let new_tile = ElevationTile{pos: Position { x: i, y: j }, elevation: elevation.floor() as usize};
+            gaussian_values.sort();
+            elevation = gaussian_values[gaussian_values.len() - 1];
+            for v in 0..gaussian_values.len() - 1{
+                elevation += (interpolation * v as f32) as usize;
+            }
+            elevations.push(elevation);
+            let new_tile = ElevationTile{pos: Position { x: i, y: j }, elevation};
             height_map.0[i][j] = new_tile;
+        }
+    }
+    elevations.sort();
+    let min_elevation = elevations[0];
+    for i in 0..size{
+        for j in 0..size{
+            height_map.0[i][j].elevation -= min_elevation;
         }
     }
     height_map
 }
 
-pub fn bump_world(world: &mut World, bumpiness: u32, scale: f32){
-    let mut gaussians = Vec::<Gaussian>::new();
-    sample_gaussians(&mut gaussians, bumpiness, scale);
-    for i in 0..MAP_SIZE {
-        for j in 0..MAP_SIZE {
-            let mut elevation: f32 = 0.0;
-            for gaussian in &gaussians{
-                elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
-            }
-            world[i][j].elevation = elevation.floor() as usize;
+pub fn bump_world(world: &mut World, height_map: HeightMap){
+    for i in 0..world.dimension{
+        for j in 0..world.dimension{
+            world.map[i][j].elevation = height_map.0[i][j].elevation;
         }
     }
 }
+// pub fn bump_world(world: &mut World, bumpiness: u32, scale: f32, interpolation: f32, stretch: f32, wideness: f32){
+//     let mut gaussians = Vec::<Gaussian>::new();
+//     sample_gaussians(&mut gaussians, bumpiness, scale, world.dimension, stretch, wideness);
+//     for i in 0..world.dimension{
+//         for j in 0..world.dimension{
+//             let mut elevation: usize = 0;
+//             let mut gaussian_values = Vec::<usize>::new();
+//             for gaussian in &gaussians{
+//                 // elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
+//                 gaussian_values.push(gaussian.get_value_at(i as f32, j as f32) as usize);
+//             }
+//             gaussian_values.sort();
+//             elevation = gaussian_values[gaussian_values.len() - 1];
+//             for v in 0..gaussian_values.len() - 1{
+//                 elevation += (interpolation * v as f32) as usize;
+//             }
+//             world.map[i][j].elevation = elevation;
+//         }
+//     }
+// }
 
 #[test]
 fn test_height_map_plot(){
-    let display_hm = create_height_map(2, 100.0);
+    let display_hm = create_height_map(DEFAULT_SIZE, 2, 100.0, 2.0, 10.0, 15.0);
     print!("{}", display_hm);
 }
 
