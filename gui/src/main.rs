@@ -1,5 +1,5 @@
-use bevy::{prelude as bv, hierarchy::BuildChildren, pbr::{self, AmbientLight}, input::mouse::MouseMotion, render::{render_resource::PrimitiveTopology, mesh::Indices}};
-use components::{camera::{camera_controller, Lights, CameraController, CustomUV}, cube::create_cube_mesh};
+use bevy::{prelude as bv, hierarchy::BuildChildren, pbr::{self, AmbientLight}};
+use components::{camera::{camera_controller, CameraController}, cube::create_cube_mesh};
 
 mod world_generator;
 mod world_utils;
@@ -30,18 +30,17 @@ fn setup(
     // camera
     commands.spawn((
         bv::Camera3dBundle {
-            transform: bv::Transform::from_xyz(-3.0, 3.0, 3.0)
-                .looking_at(bv::Vec3::new(0.0, 0.0, 0.0), bv::Vec3::Y),
+            transform: bv::Transform::from_xyz(-3.0, 3.0, -3.0)
+                .looking_at(bv::Vec3::new(-3.0, 3.0, 0.0), bv::Vec3::Y),
             ..bv::default()
         },
         CameraController {
-            pitch: -bv::Vec3::new(-3.0, 3.0, 3.0).angle_between(bv::Vec3::Y),
-            yaw: bv::Vec3::new(-3.0, 3.0, 3.0).angle_between(bv::Vec3::Z),
+            pitch: 0.0,
+            yaw: std::f32::consts::PI, // -bv::Vec3::new(-3.0, 3.0, -3.0).angle_between(bv::Vec3::X),
             ..bv::default()
         },
         pbr::ShadowFilteringMethod::Hardware2x2,
     ));
-    println!("{}", bv::Vec3::new(-3.0, 3.0, 3.0).angle_between(bv::Vec3::X));
 
     let style = bv::TextStyle {
         font_size: 20.,
@@ -69,16 +68,24 @@ fn setup(
     let custom_texture_handle: bv::Handle<bv::Image> = asset_server.load("array_texture.png");
     // Create and save a handle to the mesh.
     let cube_mesh_handle: bv::Handle<bv::Mesh> = meshes.add(create_cube_mesh());
-    commands.spawn((
-        bv::PbrBundle {
-            mesh: cube_mesh_handle,
-            material: materials.add(bv::StandardMaterial {
-                base_color_texture: Some(custom_texture_handle),
-                ..bv::default()
-            }),
-            ..bv::default()
-        },
-        CustomUV,
-    ));
-
+    let mut blocks = vec![];
+    for x in 0..10 {
+        for y in 0..10 {
+            blocks.push(
+                bv::PbrBundle {
+                    mesh: cube_mesh_handle.clone(),
+                    material: materials.add(bv::StandardMaterial {
+                        base_color_texture: Some(custom_texture_handle.clone()),
+                        ..bv::default()
+                    }),
+                    transform: bv::Transform {
+                        translation: bv::Vec3::from([x as f32,0.0, y as f32]),
+                        ..bv::default()
+                    },
+                    ..bv::default()
+                }
+            )
+        }
+    }
+    commands.spawn_batch(blocks);
 }

@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude as bv, hierarchy::BuildChildren, pbr, input::mouse::MouseMotion, render::{render_resource::PrimitiveTopology, mesh::Indices}};
+use bevy::{prelude as bv, input::mouse::MouseMotion};
 
 #[derive(bv::Component)]
 pub struct Lights;
@@ -45,11 +45,6 @@ impl Default for CameraController {
         }
     }
 }
-
-// Define a "marker" component to mark the custom mesh. Marker components are often used in Bevy for
-// filtering entities in queries with With, they're usually not queried directly since they don't contain information within them.
-#[derive(bv::Component)]
-pub struct CustomUV;
 
 pub fn camera_controller(
     time: bv::Res<bv::Time>,
