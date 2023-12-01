@@ -1,5 +1,5 @@
 use bevy::{prelude as bv, hierarchy::BuildChildren, pbr::{self, AmbientLight}};
-use components::{camera::{camera_controller, CameraController}, cube::create_cube_mesh};
+use components::{camera::{camera_controller, CameraController}, cube::create_cube_mesh, world::TickTimer};
 
 mod world_utils;
 mod components;
@@ -12,6 +12,7 @@ fn main() {
     bv::App::new()
         .add_plugins(bv::DefaultPlugins)
         .add_systems(bv::Startup, setup)
+        .insert_resource(TickTimer(bv::Timer::from_seconds(0.5, bv::TimerMode::Repeating)))
         .add_systems(
             bv::Update,
             camera_controller

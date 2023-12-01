@@ -1,6 +1,6 @@
 use std::any::TypeId;
 
-use robotics_lib::{interface::Tools, world::{World, worldgenerator::Generator, coordinates::Coordinate}, runner::{Runner, Runnable, backpack::BackPack, Robot}, event::events::Event, energy::Energy};
+use robotics_lib::{interface::{Tools, discover_tiles, robot_view}, world::{World, worldgenerator::Generator, coordinates::Coordinate}, runner::{Runner, Runnable, backpack::BackPack, Robot}, event::events::Event, energy::Energy};
 use endless_heights::height;
 
 struct Tool;
@@ -31,7 +31,7 @@ impl Runnable for MyRobot {
         
     }
     fn process_tick(&mut self, world: &mut World) {
-        
+        robot_view(self, world);
     }
 }
 

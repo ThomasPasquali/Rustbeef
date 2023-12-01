@@ -6,8 +6,6 @@ use crate::MAP_SIZE;
 use rand_distr::{Uniform, Distribution};
 use rand::{Rng, thread_rng};
 
-const DEFAULT_SIZE: usize = 10;
-const WORLD_DIMENSION: Dimension = Dimension{ width: DEFAULT_SIZE, height: DEFAULT_SIZE };
 // const MIN_MOUNTAIN_SIZE: Dimension = Dimension{width: 30, height: 30};
 // const MIN_VALLEY_SIZE: Dimension = Dimension{width: 30, height: 30};
 
@@ -135,9 +133,9 @@ pub fn create_height_map(size: usize, bumpiness: u32, scale: f32, interpolation:
 }
 
 pub fn bump_world(world: &mut World, height_map: HeightMap){
-    for i in 0..world.dimension{
-        for j in 0..world.dimension{
-            world.map[i][j].elevation = height_map.0[i][j].elevation;
+    for i in 0..MAP_SIZE{
+        for j in 0..MAP_SIZE {
+            world[i][j].elevation = height_map.0[i][j].elevation;
         }
     }
 }
@@ -164,7 +162,7 @@ pub fn bump_world(world: &mut World, height_map: HeightMap){
 
 #[test]
 fn test_height_map_plot(){
-    let display_hm = create_height_map(DEFAULT_SIZE, 2, 100.0, 2.0, 10.0, 15.0);
+    let display_hm = create_height_map(MAP_SIZE, 2, 100.0, 2.0, 10.0, 15.0);
     print!("{}", display_hm);
 }
 

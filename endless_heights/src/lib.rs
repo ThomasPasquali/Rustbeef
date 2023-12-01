@@ -41,7 +41,7 @@ impl Generator for WorldGenerator {
         let stretch = 3.0;
         let wideness = 2.0;
 
-        let height_map = height::create_height_map(world.dimension, bumpiness, scale, interpolation, stretch, wideness);
+        let height_map = height::create_height_map(MAP_SIZE, bumpiness, scale, interpolation, stretch, wideness);
         height::bump_world(&mut world, height_map);
         (
             world,
