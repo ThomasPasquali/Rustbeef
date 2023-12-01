@@ -5,7 +5,6 @@ use robotics_lib::world::tile::Content::*;
 use robotics_lib::world::tile::Tile;
 use robotics_lib::world::tile::TileType;
 use robotics_lib::world::worldgenerator::Generator;
-use strum::IntoEnumIterator;
 
 pub struct WorldGenerator {}
 
@@ -19,8 +18,11 @@ impl Generator for WorldGenerator {
             let mut row = Vec::new();
             for _ in 0..MAP_SIZE {
                 row.push(Tile {
-                    tile_type: TileType::from_repr(rng.gen_range(0..TileType::iter().len()))
-                        .unwrap(),
+                    tile_type: match rng.gen_range(1..8) {
+                        1 => TileType::Sand,
+                        2 => TileType::ShallowWater,
+                        _ => TileType::Grass
+                    },
                     content: Rock(0),
                     elevation: 0,
                 });
@@ -30,7 +32,7 @@ impl Generator for WorldGenerator {
         (
             world,
             (0, 0),
-            EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1),
+            EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1).unwrap(),
             10.0
         )
     }

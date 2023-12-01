@@ -1,29 +1,18 @@
-use std::any::TypeId;
-
 use macroquad::prelude as mq;
 use macroquad::texture::Texture2D;
-use robotics_lib::interface::Tools;
+use nla_compass::NLACompass;
 use robotics_lib::world::tile::TileType::*;
 use robotics_lib::world::{worldgenerator::Generator, World};
 use world_generator::WorldGenerator;
 use endless_heights::height;
 
-
+mod nla_compass;
 mod world_generator;
 
 const TILE_SIZE: u32 = 32;
-const MOVE_SPEED: f32 = 0.1;
+const MOVE_SPEED: f32 = 0.3;
 const LOOK_SPEED: f32 = 0.1;
 
-struct DumbTool {}
-impl Tools for DumbTool {
-    fn check(&self, world: &mut World) -> Result<(), robotics_lib::utils::LibError> {
-        Ok(())
-    }
-    fn id(&self) -> TypeId {
-        TypeId::of::<DumbTool>()
-    }
-}
 #[test]
 fn test_main(){
     main();
@@ -55,7 +44,7 @@ async fn main() {
     mq::set_cursor_grab(grabbed);
     mq::show_mouse(false);
 
-    let tools: Vec<DumbTool> = Vec::new();
+    let tools: Vec<NLACompass> = Vec::new();
     let (world, spawn, conditions, score) = WorldGenerator {}.gen();
     let mut world = World::new(world, conditions, tools, 10.0);
 
@@ -67,7 +56,6 @@ async fn main() {
 
     let height_map = height::create_height_map(world.dimension, bumpiness, scale, interpolation, stretch, wideness);
     height::bump_world(&mut world, height_map);
-
     
     let textures = vec![
         mq::Texture2D::from_file_with_format(include_bytes!("../assets/grass.png"), None),
