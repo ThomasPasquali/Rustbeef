@@ -1,15 +1,33 @@
 use std::any::TypeId;
 
-use robotics_lib::{interface::{Tools, Direction}, world::{World, tile::{Content, Tile}, coordinates::Coordinate}};
+use robotics_lib::{interface::{Tools, Direction, robot_map, robot_view, where_am_i}, world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate}, runner::{Robot, Runnable}};
 
+/// Compass destination
+/// 
+/// (at least seen)
+/// # Usage
+/// ```rust
+/// ```
+///
+/// # Examples
+/// ```rust
+/// 
+/// ```
 pub enum Destination {
-    CONTENT(Content),
+    /// Content (content, min_r, new)
+    CONTENT(Content, Option<usize>, Option<bool>),
+    /// Tile type (tiletype, min_r, new)
+    TILE_TYPE(TileType, Option<usize>, Option<bool>),
+    /// Coordinate (coordinate)
     COORDINATE(Coordinate),
-    // TILE_TYPE(TileType)
+}
+
+struct TileCost {
+    tile: Tile,
+    cost: usize
 }
 
 pub struct NLACompass {
-    world: Option<Vec<Vec<Option<Tile>>>>,
     destination: Option<Destination>
 }
 
@@ -23,17 +41,49 @@ impl Tools for NLACompass {
 }
 
 impl NLACompass {
-    fn new (world: Option<Vec<Vec<Option<Tile>>>>) -> Self {
-        NLACompass { world, destination: None }
+    pub fn new (world: Option<Vec<Vec<Option<Tile>>>>) -> Self {
+        NLACompass { destination: None }
     }
-    fn get_move(&self) -> Option<Direction> {
+
+    fn convert_map_to_cost () {
+
+    }
+
+    fn get_move_for_content (&self, c: &Content, min_r: &Option<usize>, new: &Option<bool>) -> Option<Direction> {
+        // TODO 
+        Some(Direction::Up)
+    }
+
+    fn get_move_for_tiletype (&self, t: &TileType, min_r: &Option<usize>, new: &Option<bool>) -> Option<Direction> {
+        Some(Direction::Up)
+    }
+
+    fn get_move_for_coordinate (&self, c: &Coordinate) -> Option<Direction> {
+        Some(Direction::Up)
+    }
+
+    pub fn get_move(&self, robot: &impl Runnable, world: &World) -> Option<Direction> {
         if self.destination.is_none() {
             return None;
         }
 
-        Some(Direction::Up)
+        let map = robot_map(world);
+        if map.is_none() {
+            return None;
+        }
+
+        let map = map.unwrap();
+        // let view = robot_view(robot, world);
+        let (view, curr) = where_am_i(robot, world);
+
+        match self.destination.as_ref().unwrap() {
+            Destination::CONTENT(c, min_r, new) => self.get_move_for_content(c, min_r, new),
+            Destination::TILE_TYPE(c, min_r, new) => self.get_move_for_tiletype(c, min_r, new),
+            Destination::COORDINATE(c) => self.get_move_for_coordinate(c)
+        }
     }
-    fn set_destination(&mut self, destination: Destination) {
+
+    pub fn set_destination(&mut self, destination: Destination) {
         self.destination = Some(destination);
     }
 }
