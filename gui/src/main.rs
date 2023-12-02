@@ -1,52 +1,60 @@
-use bevy::{prelude as bv, hierarchy::BuildChildren, pbr::{self, AmbientLight}};
-use components::{camera::{camera_controller, CameraController}, cube::create_cube_mesh, world::TickTimer};
+use bevy::{
+    core_pipeline::fxaa::Fxaa,
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    hierarchy::BuildChildren,
+    prelude as bv,
+};
+use crate::components::WorldPlugin;
+use bevy_extern_events::ExternEventsPlugin;
+use components::robot::{Update, initialize_runner};
 
-mod world_utils;
+use std::f32::consts::PI;
+
 mod components;
 #[test]
-fn test_main(){
+fn test_main() {
     main();
 }
 
 fn main() {
     bv::App::new()
+        .add_plugins((
+            ExternEventsPlugin::<Update>::default(),
+        ))
         .add_plugins(bv::DefaultPlugins)
-        .add_systems(bv::Startup, setup)
-        .insert_resource(TickTimer(bv::Timer::from_seconds(0.5, bv::TimerMode::Repeating)))
-        .add_systems(
-            bv::Update,
-            camera_controller
-        )
+        .add_systems(bv::Startup, (setup, initialize_runner))
+        .add_plugins(WorldPlugin)
         .run();
 }
 
-
 fn setup(
     mut commands: bv::Commands,
-    asset_server: bv::ResMut<bv::AssetServer>,
-    mut materials: bv::ResMut<bv::Assets<bv::StandardMaterial>>,
-    mut meshes: bv::ResMut<bv::Assets<bv::Mesh>>,
 ) {
     // camera
-    commands.spawn((
-        bv::Camera3dBundle {
-            transform: bv::Transform::from_xyz(-3.0, 3.0, -3.0)
-                .looking_at(bv::Vec3::new(-3.0, 3.0, 0.0), bv::Vec3::Y),
-            ..bv::default()
-        },
-        CameraController {
-            pitch: 0.0,
-            yaw: std::f32::consts::PI, // -bv::Vec3::new(-3.0, 3.0, -3.0).angle_between(bv::Vec3::X),
-            ..bv::default()
-        },
-        pbr::ShadowFilteringMethod::Hardware2x2,
-    ));
+    commands
+        .spawn(bv::Camera3dBundle {
+            projection: bv::Projection::Perspective(bv::PerspectiveProjection {
+                fov: PI / 2.,
+                far: 2048.0,
+                ..Default::default()
+            }),
+            transform: bv::Transform::from_xyz(0.0, 0.0, 0.0)
+                .looking_at(bv::Vec3::ZERO, bv::Vec3::Y),
+            ..Default::default()
+        })
+        .insert(components::camera::CameraController::default())
+        .insert(Fxaa::default())
+        .insert(bevy_atmosphere::plugin::AtmosphereCamera::default());
+
+    commands.insert_resource(bv::AmbientLight {
+        color: bv::Color::WHITE,
+        brightness: 1.0,
+    });
 
     let style = bv::TextStyle {
         font_size: 20.,
         ..bv::default()
     };
-    commands.insert_resource(AmbientLight{color: bv::Color::WHITE, brightness: 0.5});
     commands
         .spawn(bv::NodeBundle {
             style: bv::Style {
@@ -59,33 +67,9 @@ fn setup(
             ..bv::default()
         })
         .with_children(|c| {
-            c.spawn(bv::TextBundle::from_sections([
-                bv::TextSection::new("test\n", style.clone()),
-            ]));
+            c.spawn(bv::TextBundle::from_sections([bv::TextSection::new(
+                "test\n",
+                style.clone(),
+            )]));
         });
-    
-    // Import the custom texture.
-    let custom_texture_handle: bv::Handle<bv::Image> = asset_server.load("array_texture.png");
-    // Create and save a handle to the mesh.
-    let cube_mesh_handle: bv::Handle<bv::Mesh> = meshes.add(create_cube_mesh());
-    let mut blocks = vec![];
-    for x in 0..10 {
-        for y in 0..10 {
-            blocks.push(
-                bv::PbrBundle {
-                    mesh: cube_mesh_handle.clone(),
-                    material: materials.add(bv::StandardMaterial {
-                        base_color_texture: Some(custom_texture_handle.clone()),
-                        ..bv::default()
-                    }),
-                    transform: bv::Transform {
-                        translation: bv::Vec3::from([x as f32,0.0, y as f32]),
-                        ..bv::default()
-                    },
-                    ..bv::default()
-                }
-            )
-        }
-    }
-    commands.spawn_batch(blocks);
 }

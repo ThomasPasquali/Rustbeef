@@ -4,6 +4,7 @@ pub mod utils;
 use rand::Rng;
 use robotics_lib::world::environmental_conditions::EnvironmentalConditions;
 use robotics_lib::world::environmental_conditions::WeatherType;
+use robotics_lib::world::tile::Content;
 use robotics_lib::world::tile::Content::*;
 use robotics_lib::world::tile::Tile;
 use robotics_lib::world::tile::TileType;
@@ -26,10 +27,9 @@ impl Generator for WorldGenerator {
                 row.push(Tile {
                     tile_type: match rng.gen_range(0..TileType::iter().len()) {
                         1 => TileType::Sand,
-                        2 => TileType::ShallowWater,
                         _ => TileType::Grass,
                     },
-                    content: Rock(0),
+                    content: Content::None,
                     elevation: 0,
                 });
             }

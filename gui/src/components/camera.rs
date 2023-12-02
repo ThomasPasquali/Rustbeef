@@ -1,118 +1,128 @@
-use std::f32::consts::PI;
+use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use std::f32::consts::FRAC_PI_2;
 
-use bevy::{prelude as bv, input::mouse::MouseMotion};
+// Reusing the player controller impl for now.
 
-#[derive(bv::Component)]
-pub struct Lights;
+pub const DEFAULT_CAMERA_SENS: f32 = 0.005;
 
-#[derive(bv::Component)]
+#[derive(Default, Component)]
 pub struct CameraController {
-    pub enabled: bool,
-    pub sensitivity: f32,
-    pub key_forward: bv::KeyCode,
-    pub key_back: bv::KeyCode,
-    pub key_left: bv::KeyCode,
-    pub key_right: bv::KeyCode,
-    pub key_up: bv::KeyCode,
-    pub key_down: bv::KeyCode,
-    pub key_run: bv::KeyCode,
-    pub walk_speed: f32,
-    pub run_speed: f32,
-    pub friction: f32,
-    pub pitch: f32,
-    pub yaw: f32,
-    pub velocity: bv::Vec3,
+    yaw: f32,
+    pitch: f32,
+    cursor_locked: bool,
 }
 
-impl Default for CameraController {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            sensitivity: 0.2,
-            key_forward: bv::KeyCode::W,
-            key_back: bv::KeyCode::S,
-            key_left: bv::KeyCode::A,
-            key_right: bv::KeyCode::D,
-            key_up: bv::KeyCode::Space,
-            key_down: bv::KeyCode::ShiftLeft,
-            key_run: bv::KeyCode::ControlLeft,
-            walk_speed: 10.0,
-            run_speed: 30.0,
-            friction: 0.5,
-            pitch: 0.0,
-            yaw: 0.0,
-            velocity: bv::Vec3::ZERO,
-        }
-    }
-}
-
-pub fn camera_controller(
-    time: bv::Res<bv::Time>,
-    mut mouse_events: bv::EventReader<MouseMotion>,
-    key_input: bv::Res<bv::Input<bv::KeyCode>>,
-    mut query: bv::Query<(&mut bv::Transform, &mut CameraController), bv::With<bv::Camera>>,
+pub fn handle_mouse_move(
+    mut query: Query<(&mut CameraController, &mut Transform)>,
+    mut mouse_motion_event_reader: EventReader<MouseMotion>,
+    mut windows: Query<&mut Window>,
 ) {
-    let dt = time.delta_seconds();
+    let (mut controller, mut transform) = query.single_mut();
+    let mut delta = Vec2::ZERO;
 
-    // Handle mouse input
-    let mut mouse_delta = bv::Vec2::ZERO;
-    for mouse_event in mouse_events.read() {
-        mouse_delta += mouse_event.delta;
+    if controller.cursor_locked {
+        for mouse_move in mouse_motion_event_reader.read() {
+            delta += mouse_move.delta;
+        }
     }
 
-    for (mut transform, mut options) in &mut query {
-        if !options.enabled {
-            continue;
-        }
+    let mut window = windows.single_mut();
+    window.cursor.visible = !controller.cursor_locked;
+    window.cursor.grab_mode = if controller.cursor_locked {
+        CursorGrabMode::Locked
+    } else {
+        CursorGrabMode::None
+    };
 
-        // Handle key input
-        let mut axis_input = bv::Vec3::ZERO;
-        if key_input.pressed(options.key_forward) {
-            axis_input.z += 1.0;
-        }
-        if key_input.pressed(options.key_back) {
-            axis_input.z -= 1.0;
-        }
-        if key_input.pressed(options.key_right) {
-            axis_input.x += 1.0;
-        }
-        if key_input.pressed(options.key_left) {
-            axis_input.x -= 1.0;
-        }
-        if key_input.pressed(options.key_up) {
-            axis_input.y += 1.0;
-        }
-        if key_input.pressed(options.key_down) {
-            axis_input.y -= 1.0;
-        }
+    if delta == Vec2::ZERO {
+        return;
+    }
 
-        // Apply movement update
-        if axis_input != bv::Vec3::ZERO {
-            let max_speed = if key_input.pressed(options.key_run) {
-                options.run_speed
-            } else {
-                options.walk_speed
-            };
-            options.velocity = axis_input.normalize() * max_speed;
-        } else {
-            let friction = options.friction.clamp(0.0, 1.0);
-            options.velocity *= 1.0 - friction;
-            if options.velocity.length_squared() < 1e-6 {
-                options.velocity = bv::Vec3::ZERO;
-            }
-        }
-        let forward = transform.forward();
-        let right = transform.right();
-        transform.translation += options.velocity.x * dt * right
-            + options.velocity.y * dt * bv::Vec3::Y
-            + options.velocity.z * dt * forward;
+    let mut new_pitch = delta.y.mul_add(DEFAULT_CAMERA_SENS, controller.pitch);
+    let new_yaw = delta.x.mul_add(-DEFAULT_CAMERA_SENS, controller.yaw);
 
-        if mouse_delta != bv::Vec2::ZERO {
-            // Apply look update
-            options.pitch = (options.pitch - mouse_delta.y * 0.5 * options.sensitivity * dt)
-                .clamp(-PI / 2., PI / 2.);
-            options.yaw -= mouse_delta.x * options.sensitivity * dt;
-            transform.rotation = bv::Quat::from_euler(bv::EulerRot::ZYX, 0.0, options.yaw, options.pitch);
-        }
+    new_pitch = new_pitch.clamp(-FRAC_PI_2, FRAC_PI_2);
+
+    controller.yaw = new_yaw;
+    controller.pitch = new_pitch;
+
+    transform.rotation =
+        Quat::from_axis_angle(Vec3::Y, new_yaw) * Quat::from_axis_angle(-Vec3::X, new_pitch);
+}
+
+pub fn handle_mouse_input(
+    mut query: Query<(&mut CameraController, &mut Transform)>,
+    keys: Res<Input<KeyCode>>,
+    btns: Res<Input<MouseButton>>,
+) {
+    let (mut controller, mut transform) = query.single_mut();
+
+    // cursor grabbing
+    if btns.just_pressed(MouseButton::Left) {
+        controller.cursor_locked = true;
+    }
+
+    // cursor ungrabbing
+    if keys.just_pressed(KeyCode::Escape) {
+        controller.cursor_locked = false;
+    }
+    let mut direction = Vec3::ZERO;
+
+    let forward = transform.rotation.mul_vec3(Vec3::Z).normalize() * Vec3::new(1.0, 0., 1.0);
+    let right = transform.rotation.mul_vec3(Vec3::X).normalize();
+
+    let mut acceleration = 1.0f32;
+
+    if keys.pressed(KeyCode::W) {
+        direction.z -= 1.0;
+    }
+
+    if keys.pressed(KeyCode::S) {
+        direction.z += 1.0;
+    }
+
+    if keys.pressed(KeyCode::D) {
+        direction.x += 1.0;
+    }
+
+    if keys.pressed(KeyCode::A) {
+        direction.x -= 1.0;
+    }
+
+    if keys.pressed(KeyCode::Space) {
+        direction.y += 1.0;
+    }
+
+    if keys.pressed(KeyCode::ShiftLeft) {
+        direction.y -= 1.0;
+    }
+
+    if keys.pressed(KeyCode::ControlLeft) {
+        acceleration *= 8.0;
+    }
+
+    if direction == Vec3::ZERO {
+        return;
+    }
+
+    // hardcoding 0.10 as a factor for now to not go zoomin across the world.
+    transform.translation += direction.x * right * acceleration
+        + direction.z * forward * acceleration
+        + direction.y * Vec3::Y * acceleration;
+}
+
+#[derive(Hash, Copy, Clone, PartialEq, Eq, Debug, SystemSet)]
+/// Systems related to player controls.
+pub struct PlayerControllerSet;
+
+pub struct CameraControllerPlugin;
+
+impl Plugin for CameraControllerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (handle_mouse_input, handle_mouse_move)
+                .chain()
+        );
     }
 }
