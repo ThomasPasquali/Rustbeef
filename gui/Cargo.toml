@@ -10,4 +10,5 @@ macroquad = "0.4.4"
 rand = "0.8.5"
 robotics_lib = { path = "../Robotic-Lib" }
 endless_heights = { path = "../endless_heights" }
+nla_compass = { path = "../nla_compass" }
 strum = "0.25.0"

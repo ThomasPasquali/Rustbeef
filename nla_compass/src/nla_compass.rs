@@ -1,6 +1,8 @@
 use std::any::TypeId;
 
-use robotics_lib::{interface::{Tools, Direction, robot_map, robot_view, where_am_i}, world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate}, runner::{Robot, Runnable}};
+use robotics_lib::{interface::{Tools, Direction, robot_view, robot_map, where_am_i},
+                   world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate},
+                   runner::{Robot, Runnable}};
 
 /// Compass destination
 /// 
@@ -45,12 +47,8 @@ impl NLACompass {
         NLACompass { destination: None }
     }
 
-    fn convert_map_to_cost () {
-
-    }
-
     fn get_move_for_content (&self, c: &Content, min_r: &Option<usize>, new: &Option<bool>) -> Option<Direction> {
-        // TODO 
+        // TODO
         Some(Direction::Up)
     }
 
@@ -60,6 +58,11 @@ impl NLACompass {
 
     fn get_move_for_coordinate (&self, c: &Coordinate) -> Option<Direction> {
         Some(Direction::Up)
+    }
+
+    fn costs_around_me(robot: &impl Runnable, world: &World) -> Option<Vec<Vec<Option<Tile>>>> {
+        let (view, curr) = where_am_i(robot, world);
+        for tiles in view
     }
 
     pub fn get_move(&self, robot: &impl Runnable, world: &World) -> Option<Direction> {
