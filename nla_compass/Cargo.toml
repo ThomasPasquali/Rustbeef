@@ -1,14 +1,11 @@
 [package]
-name = "game"
+name = "nla_compass"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = "0.4.4"
-rand = "0.8.5"
 robotics_lib = { path = "../Robotic-Lib" }
-endless_heights = { path = "../endless_heights" }
-nla_compass = { path = "../nla_compass" }
-strum = "0.25.0"
+rand = { version = "0.8.5", features = [] }
+pathfinding = "4.4.0"

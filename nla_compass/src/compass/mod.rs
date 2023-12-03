@@ -4,6 +4,7 @@ use robotics_lib::{interface::{Tools, Direction, robot_view, robot_map, where_am
                    world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate},
                    runner::{Robot, Runnable}};
 
+
 /// Compass destination
 /// 
 /// (at least seen)
@@ -61,8 +62,9 @@ impl NLACompass {
     }
 
     fn costs_around_me(robot: &impl Runnable, world: &World) -> Option<Vec<Vec<Option<Tile>>>> {
-        let (view, curr) = where_am_i(robot, world);
-        for tiles in view
+        //let (view, curr) = where_am_i(robot, world);
+        //for tiles in view
+        return None;
     }
 
     pub fn get_move(&self, robot: &impl Runnable, world: &World) -> Option<Direction> {

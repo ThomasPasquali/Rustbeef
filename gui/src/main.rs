@@ -1,12 +1,11 @@
 use macroquad::prelude as mq;
 use macroquad::texture::Texture2D;
-use nla_compass::NLACompass;
+use nla_compass::compass::NLACompass;
 use robotics_lib::world::tile::TileType::*;
 use robotics_lib::world::{worldgenerator::Generator, World};
 use world_generator::WorldGenerator;
 use endless_heights::height;
 
-mod nla_compass;
 mod world_generator;
 
 const TILE_SIZE: u32 = 32;
