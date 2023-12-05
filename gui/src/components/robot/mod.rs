@@ -30,11 +30,10 @@ pub struct MyRobot {
     robot: Robot,
 }
 
-#[derive(Default)]
-pub struct Update {
-    changed_tiles: Vec<Vec<Option<Tile>>>,
-    coordinates: Option<(usize, usize)>,
-    position: (usize, usize),
+#[derive(Default, Debug)]
+pub struct WorldTick {
+    pub changed_tiles: Vec<Vec<Option<Tile>>>,
+    pub coordinates: Option<(usize, usize)>,
 }
 
 pub fn tick(
@@ -70,23 +69,19 @@ impl Runnable for MyRobot {
     fn process_tick(&mut self, world: &mut World) {
         let tiles = robot_view(self, world);
         // Inform world that map changed
-        queue_event(Update {
+        queue_event(WorldTick {
             changed_tiles: tiles,
             coordinates: Some((
                 self.get_coordinate().get_col(),
                 self.get_coordinate().get_row(),
-            )),
-            position: (
-                self.get_coordinate().get_row(),
-                self.get_coordinate().get_col(),
-            ),
+            ))
         });
         // Go in random direction
         let mut rng = thread_rng();
         let _ = match rng.gen_range(0..=3) {
-            0 => go(self, world, robotics_lib::interface::Direction::Left),
-            1 => go(self, world, robotics_lib::interface::Direction::Up),
-            2 => go(self, world, robotics_lib::interface::Direction::Down),
+            0 => go(self, world, robotics_lib::interface::Direction::Down),
+            1 => go(self, world, robotics_lib::interface::Direction::Down),
+            2 => go(self, world, robotics_lib::interface::Direction::Right),
             3 => go(self, world, robotics_lib::interface::Direction::Right),
             _ => go(self, world, robotics_lib::interface::Direction::Right),
         };
@@ -104,7 +99,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator, tools).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        0.5,
+        0.1,
         bv::TimerMode::Repeating,
     )))
 }
@@ -114,7 +109,7 @@ pub struct RobotPlugin;
 impl Plugin for RobotPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Startup, initialize_runner)
-            .add_plugins((ExternEventsPlugin::<Update>::default(),))
+            .add_plugins((ExternEventsPlugin::<WorldTick>::default(),))
             .add_systems(crate::bv::Update, tick);
     }
 }

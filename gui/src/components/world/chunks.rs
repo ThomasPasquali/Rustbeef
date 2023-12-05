@@ -1,15 +1,16 @@
 use bevy::{
-    math::IVec3,
+    math::{IVec3, Vec3},
     prelude::{
         Changed, Commands, Entity, GlobalTransform, IntoSystemConfigs, Last, Plugin, PostUpdate,
-        Query, Res, ResMut, Resource, SystemSet, Update, With,
+        Query, Res, ResMut, Resource, SystemSet, Update, With, default,
     },
-    utils::{HashMap, HashSet},
+    utils::{HashMap, HashSet}, ecs::{event::EventReader, component::Component}, app::Startup, scene::SceneBundle, asset::{AssetServer, Assets}, transform::components::Transform, pbr::{MaterialMeshBundle, PbrBundle, StandardMaterial}, render::{mesh::{Mesh, shape}, render_resource::PrimitiveTopology, color::Color},
 };
+use bevy_extern_events::ExternEvent;
 use float_ord::FloatOrd;
 
 use super::{Chunk, ChunkShape, CHUNK_LENGTH};
-use crate::components::camera::CameraController;
+use crate::components::{camera::CameraController, robot::WorldTick, terraingen::DISCOVERED_WORLD, render::ChunkMaterialSingleton};
 use crate::components::storage::ChunkMap;
 use crate::components::voxel::Voxel;
 
@@ -27,6 +28,29 @@ fn update_player_pos(
         if chunk_pos.chunk_min != nearest_chunk_origin {
             chunk_pos.chunk_min = nearest_chunk_origin;
         }
+    }
+}
+
+#[derive(Component)]
+pub struct Robot(Entity);
+#[derive(Component, Default, Debug)]
+pub struct Position { pos: IVec3 }
+
+pub fn event_system(
+    mut commands: Commands,
+    mut native_events: EventReader<ExternEvent<WorldTick>>,
+    mut dirty_chunks: ResMut<DirtyChunks>,
+    mut query_robot: Query<&mut Position, With<Robot>>,
+) {
+    for e in native_events.read() {
+        let tile = &DISCOVERED_WORLD.read().unwrap().world[e.0.coordinates.unwrap().0][e.0.coordinates.unwrap().1];
+        let robot_coords = IVec3 { x: e.0.coordinates.unwrap().0 as i32 + 1, y: tile.elevation as i32 + 2, z: e.0.coordinates.unwrap().1 as i32 + 1};
+        // let nearest_chunk_origin = !IVec3::splat((CHUNK_LENGTH - 1) as i32) & robot_coords;
+        let mut robot = query_robot.single_mut();
+        robot.pos = robot_coords;
+
+        // dirty_chunks.mark_dirty(nearest_chunk_origin);
+
     }
 }
 
@@ -199,6 +223,40 @@ impl ChunkCommandQueue {
     }
 }
 
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, 
+    mut materials: ResMut<Assets<StandardMaterial>>, mut meshes: ResMut<Assets<Mesh>>,) {
+    let robot = commands.spawn(PbrBundle {
+        material: materials.add(Color::RED.into()),
+        mesh: meshes.add(shape::Cube::new(1.0).into()),
+        transform: Transform::from_translation(Vec3::new(0.0, 2.0, 0.0)),
+        ..Default::default()
+    }).id();
+    commands.spawn((
+        Robot(robot),
+        Position {..Default::default()}
+    ));
+
+}
+
+fn update_robot(
+    mut tiles: Query<(
+        &Position,
+        &Robot,
+        Changed<Position>,
+    )>,
+    mut transforms: Query<&mut Transform>,
+) {
+    for (position, robot, changed) in tiles.iter_mut()
+    {
+        if changed {
+            if let Ok(mut transform) = transforms.get_mut(robot.0) {
+                println!("{:?}", position);
+                transform.translation = Vec3::new(position.pos.x as f32 + 0.5, position.pos.y as f32 + 0.5, position.pos.z as f32 + 0.5);
+            }
+        }
+    }
+}
+
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource::<ChunkLoadRadius>(ChunkLoadRadius {
@@ -212,10 +270,11 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
+        .add_systems(Startup, setup)
         .configure_sets(Update, ChunkLoadingSet)
         .add_systems(
             Update,
-            (update_player_pos, update_view_chunks, create_chunks)
+            (update_player_pos, event_system, update_view_chunks, create_chunks, update_robot)
                 .chain()
                 .in_set(ChunkLoadingSet),
         )
