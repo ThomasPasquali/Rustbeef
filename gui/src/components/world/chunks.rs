@@ -4,13 +4,13 @@ use bevy::{
         Changed, Commands, Entity, GlobalTransform, IntoSystemConfigs, Last, Plugin, PostUpdate,
         Query, Res, ResMut, Resource, SystemSet, Update, With, default,
     },
-    utils::{HashMap, HashSet}, ecs::{event::EventReader, component::Component}, app::Startup, scene::SceneBundle, asset::{AssetServer, Assets}, transform::components::Transform, pbr::{MaterialMeshBundle, PbrBundle, StandardMaterial}, render::{mesh::{Mesh, shape}, render_resource::PrimitiveTopology, color::Color},
+    utils::{HashMap, HashSet}, ecs::{event::EventReader, component::Component}, app::Startup, scene::SceneBundle, asset::{AssetServer, Assets}, transform::components::Transform, pbr::{MaterialMeshBundle, PbrBundle, StandardMaterial}, render::{mesh::{Mesh, shape}, render_resource::PrimitiveTopology, color::Color}, text::Text,
 };
 use bevy_extern_events::ExternEvent;
 use float_ord::FloatOrd;
 
 use super::{Chunk, ChunkShape, CHUNK_LENGTH};
-use crate::components::{camera::CameraController, robot::WorldTick, terraingen::DISCOVERED_WORLD, render::ChunkMaterialSingleton};
+use crate::{components::{camera::CameraController, robot::WorldTick, terraingen::DISCOVERED_WORLD, render::ChunkMaterialSingleton}, RobotDirectionText};
 use crate::components::storage::ChunkMap;
 use crate::components::voxel::Voxel;
 
@@ -41,6 +41,7 @@ pub fn event_system(
     mut native_events: EventReader<ExternEvent<WorldTick>>,
     mut dirty_chunks: ResMut<DirtyChunks>,
     mut query_robot: Query<&mut Position, With<Robot>>,
+    mut query_text: Query<&mut Text, With<RobotDirectionText>>,
 ) {
     for e in native_events.read() {
         let tile = &DISCOVERED_WORLD.read().unwrap().world[e.0.coordinates.unwrap().0][e.0.coordinates.unwrap().1];
@@ -49,6 +50,8 @@ pub fn event_system(
         let mut robot = query_robot.single_mut();
         robot.pos = robot_coords;
 
+        let mut text = query_text.single_mut();
+        text.sections[0].value = String::from(e.0.direction);
         // dirty_chunks.mark_dirty(nearest_chunk_origin);
 
     }
