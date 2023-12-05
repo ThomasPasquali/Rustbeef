@@ -178,6 +178,8 @@ impl NLACompass {
             costs.push(cost);
         }
 
+        // TODO eventually change costs proportionality
+
         let choice = ProbabilisticChoice::inverse_wheighted_choice(&costs);
         match choice {
             Ok(c) => {
