@@ -9,3 +9,4 @@ edition = "2021"
 rand_distr = "0.4.3"
 rand = "0.8.5"
 robotics_lib = { path = "../Robotic-Lib" }
+strum = "0.25.0"
