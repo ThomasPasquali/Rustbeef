@@ -15,5 +15,3 @@ Cargo.lock
 *.pdb
 .idea
 .DS_Store
-
-Robotic-Lib/
