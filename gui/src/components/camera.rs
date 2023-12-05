@@ -119,10 +119,6 @@ pub struct CameraControllerPlugin;
 
 impl Plugin for CameraControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (handle_mouse_input, handle_mouse_move)
-                .chain()
-        );
+        app.add_systems(Update, (handle_mouse_input, handle_mouse_move).chain());
     }
 }

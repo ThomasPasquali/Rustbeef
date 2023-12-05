@@ -13,7 +13,7 @@ use strum::IntoEnumIterator;
 
 pub struct WorldGenerator {}
 
-const MAP_SIZE: usize = 50;
+pub const MAP_SIZE: usize = 100;
 
 type World = Vec<Vec<Tile>>;
 
@@ -41,13 +41,14 @@ impl Generator for WorldGenerator {
         let stretch = 3.0;
         let wideness = 2.0;
 
-        let height_map = height::create_height_map(MAP_SIZE, bumpiness, scale, interpolation, stretch, wideness);
+        let height_map =
+            height::create_height_map(MAP_SIZE, bumpiness, scale, interpolation, stretch, wideness);
         height::bump_world(&mut world, height_map);
         (
             world,
             (0, 0),
             EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1).unwrap(),
-            10.0
+            10.0,
         )
     }
 }

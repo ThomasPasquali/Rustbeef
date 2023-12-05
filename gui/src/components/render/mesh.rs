@@ -2,8 +2,13 @@ use std::marker::PhantomData;
 
 use crate::components::{storage::VoxelBuffer, voxel::MaterialVoxel};
 use bevy::{
+    ecs::component::Component,
     prelude::Mesh,
-    render::{mesh::{Indices, VertexAttributeValues, MeshVertexAttribute}, extract_component::ExtractComponent, render_resource::VertexFormat}, ecs::component::Component,
+    render::{
+        extract_component::ExtractComponent,
+        mesh::{Indices, MeshVertexAttribute, VertexAttributeValues},
+        render_resource::VertexFormat,
+    },
 };
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndcopy::copy3;

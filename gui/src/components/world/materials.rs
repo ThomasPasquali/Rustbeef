@@ -1,7 +1,9 @@
 use bevy::prelude::{Color, Plugin};
 
-use crate::{voxel_material, components::material::{VoxelMaterialRegistry, MaterialRegistryInfo, VoxelMaterialFlags}};
-
+use crate::{
+    components::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry},
+    voxel_material,
+};
 
 voxel_material!(Dirt, 1);
 voxel_material!(Sand, 2);

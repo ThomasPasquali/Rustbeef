@@ -1,12 +1,5 @@
-use bevy::{
-    core_pipeline::fxaa::Fxaa,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    hierarchy::BuildChildren,
-    prelude as bv,
-};
 use crate::components::WorldPlugin;
-use bevy_extern_events::ExternEventsPlugin;
-use components::robot::{Update, initialize_runner};
+use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv};
 
 use std::f32::consts::PI;
 
@@ -18,18 +11,13 @@ fn test_main() {
 
 fn main() {
     bv::App::new()
-        .add_plugins((
-            ExternEventsPlugin::<Update>::default(),
-        ))
         .add_plugins(bv::DefaultPlugins)
-        .add_systems(bv::Startup, (setup, initialize_runner))
+        .add_systems(bv::Startup, setup)
         .add_plugins(WorldPlugin)
         .run();
 }
 
-fn setup(
-    mut commands: bv::Commands,
-) {
+fn setup(mut commands: bv::Commands) {
     // camera
     commands
         .spawn(bv::Camera3dBundle {

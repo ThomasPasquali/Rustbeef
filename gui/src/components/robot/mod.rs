@@ -1,18 +1,23 @@
-use bevy::prelude as bv;
+use bevy::{
+    app::{Plugin, Startup},
+    prelude as bv,
+};
 
-use bevy_extern_events::queue_event;
+use bevy_extern_events::{queue_event, ExternEventsPlugin};
 use rand::{thread_rng, Rng};
 use robotics_lib::{
     energy::Energy,
     event::events::Event,
     interface::{go, robot_view, Tools},
     runner::{backpack::BackPack, Robot, Runnable, Runner},
-    world::{coordinates::Coordinate, tile::Tile, World},
+    world::{coordinates::Coordinate, tile::Tile, worldgenerator::Generator, World},
 };
+
+use super::terraingen::DISCOVERED_WORLD;
 
 #[derive(bv::Resource)]
 pub struct WorldData {
-    runner: Runner,
+    pub runner: Runner,
 }
 
 #[derive(bv::Resource)]
@@ -29,6 +34,7 @@ pub struct MyRobot {
 pub struct Update {
     changed_tiles: Vec<Vec<Option<Tile>>>,
     coordinates: Option<(usize, usize)>,
+    position: (usize, usize),
 }
 
 pub fn tick(
@@ -60,7 +66,7 @@ impl Runnable for MyRobot {
     fn get_energy_mut(&mut self) -> &mut Energy {
         &mut self.robot.energy
     }
-    fn handle_event(&mut self, event: Event) {}
+    fn handle_event(&mut self, _event: Event) {}
     fn process_tick(&mut self, world: &mut World) {
         let tiles = robot_view(self, world);
         // Inform world that map changed
@@ -70,6 +76,10 @@ impl Runnable for MyRobot {
                 self.get_coordinate().get_col(),
                 self.get_coordinate().get_row(),
             )),
+            position: (
+                self.get_coordinate().get_row(),
+                self.get_coordinate().get_col(),
+            ),
         });
         // Go in random direction
         let mut rng = thread_rng();
@@ -84,13 +94,27 @@ impl Runnable for MyRobot {
 }
 
 pub fn initialize_runner(mut commands: bv::Commands) {
-    let mut robot = MyRobot {
+    let robot = MyRobot {
         robot: Robot::new(),
     };
     let mut generator = endless_heights::WorldGenerator {};
     let tools = vec![Tool];
+    DISCOVERED_WORLD.write().unwrap().world = generator.gen().0;
     commands.insert_resource(WorldData {
         runner: Runner::new(Box::new(robot), &mut generator, tools).unwrap(),
     });
-    commands.insert_resource(TickTimer(bv::Timer::from_seconds(0.5, bv::TimerMode::Repeating)));
+    commands.insert_resource(TickTimer(bv::Timer::from_seconds(
+        0.5,
+        bv::TimerMode::Repeating,
+    )))
+}
+
+pub struct RobotPlugin;
+
+impl Plugin for RobotPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(Startup, initialize_runner)
+            .add_plugins((ExternEventsPlugin::<Update>::default(),))
+            .add_systems(crate::bv::Update, tick);
+    }
 }

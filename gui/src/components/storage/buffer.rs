@@ -1,11 +1,10 @@
-use bevy::ecs::system::Resource;
 use ilattice::extent::Extent;
 use ilattice::glam::UVec3;
 use ndshape::Shape;
 
 /// A buffer of typed voxel data stored as a contiguous array in memory.
 #[allow(dead_code)]
-#[derive(Clone, Resource, Debug)]
+#[derive(Clone)]
 pub struct VoxelBuffer<V, S: Shape<3, Coord = u32>>
 where
     V: Copy + Clone + Default,
