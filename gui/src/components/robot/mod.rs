@@ -13,6 +13,8 @@ use robotics_lib::{
     world::{coordinates::Coordinate, tile::Tile, worldgenerator::Generator, World},
 };
 
+use crate::{LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW};
+
 use super::terraingen::DISCOVERED_WORLD;
 
 #[derive(bv::Resource)]
@@ -34,6 +36,7 @@ pub struct MyRobot {
 pub struct WorldTick {
     pub changed_tiles: Vec<Vec<Option<Tile>>>,
     pub coordinates: Option<(usize, usize)>,
+    pub direction: char
 }
 
 pub fn tick(
@@ -67,6 +70,14 @@ impl Runnable for MyRobot {
     }
     fn handle_event(&mut self, _event: Event) {}
     fn process_tick(&mut self, world: &mut World) {
+        // Go in random direction
+        let mut rng = thread_rng();
+        let direction = rng.gen_range(0..=1);
+        let _ = match direction {
+            0 => go(self, world, robotics_lib::interface::Direction::Down),
+            1 => go(self, world, robotics_lib::interface::Direction::Right),
+            _ => go(self, world, robotics_lib::interface::Direction::Right),
+        };
         let tiles = robot_view(self, world);
         // Inform world that map changed
         queue_event(WorldTick {
@@ -74,17 +85,13 @@ impl Runnable for MyRobot {
             coordinates: Some((
                 self.get_coordinate().get_col(),
                 self.get_coordinate().get_row(),
-            ))
+            )),
+            direction: match direction {
+                0 => DOWN_ARROW,
+                1 => RIGHT_ARROW,
+                _ => RIGHT_ARROW
+            }
         });
-        // Go in random direction
-        let mut rng = thread_rng();
-        let _ = match rng.gen_range(0..=3) {
-            0 => go(self, world, robotics_lib::interface::Direction::Down),
-            1 => go(self, world, robotics_lib::interface::Direction::Down),
-            2 => go(self, world, robotics_lib::interface::Direction::Right),
-            3 => go(self, world, robotics_lib::interface::Direction::Right),
-            _ => go(self, world, robotics_lib::interface::Direction::Right),
-        };
     }
 }
 
@@ -99,7 +106,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator, tools).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        0.1,
+        0.5,
         bv::TimerMode::Repeating,
     )))
 }

@@ -1,5 +1,5 @@
 use crate::components::WorldPlugin;
-use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv, asset::{Handle, AssetServer}, text::Font, ecs::system::Res};
+use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv, asset::{Handle, AssetServer}, text::Font, ecs::{system::Res, component::Component}};
 
 use std::f32::consts::PI;
 
@@ -8,6 +8,9 @@ mod components;
 fn test_main() {
     main();
 }
+
+#[derive(Component)]
+struct RobotDirectionText;
 
 const LEFT_ARROW:char = '🢀';
 const RIGHT_ARROW:char = '🢂';
@@ -62,9 +65,9 @@ fn setup(mut commands: bv::Commands, server: Res<AssetServer>) {
             ..bv::default()
         })
         .with_children(|c| {
-            c.spawn(bv::TextBundle::from_sections([bv::TextSection::new(
+            c.spawn((bv::TextBundle::from_sections([bv::TextSection::new(
                 format!("{} {} {} {}", LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW),
                 style.clone(),
-            )]));
+            )]), RobotDirectionText));
         });
 }
