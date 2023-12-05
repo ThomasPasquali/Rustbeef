@@ -1,4 +1,5 @@
 use pathfinding::prelude::{build_path, dijkstra_all};
+pub mod probabilistic_choice;
 
 
 fn successors(&n: &u32) -> Vec<(u32, usize)> {
