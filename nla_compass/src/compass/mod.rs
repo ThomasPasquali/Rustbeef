@@ -17,6 +17,7 @@ use robotics_lib::{interface::{Tools, Direction, robot_view, robot_map, where_am
 /// ```rust
 /// 
 /// ```
+#[derive(Clone)]
 pub enum Destination {
     /// Content (content, min_r, new)
     CONTENT(Content, Option<usize>, Option<bool>),
@@ -31,6 +32,7 @@ struct TileCordinates<'a> {
     pos: (usize, usize)
 }
 
+#[derive(Clone)]
 pub struct NLACompassParams {
     COST_NEG_EL_DIFF_POW: f32,
     COST_NEXT_NEXT_POW: f32,
@@ -46,6 +48,8 @@ impl Default for NLACompassParams {
     }
 }
 
+
+#[derive(Clone)]
 pub struct NLACompass {
     params: NLACompassParams,
     destination: Option<Destination>
@@ -61,7 +65,7 @@ impl Tools for NLACompass {
 }
 
 impl NLACompass {
-    pub fn new (world: Option<Vec<Vec<Option<Tile>>>>) -> Self {
+    pub fn new () -> Self {
         NLACompass { destination: None, params: NLACompassParams::default() }
     }
 
@@ -133,34 +137,26 @@ impl NLACompass {
         Some(Direction::Up)
     }
 
-    pub fn get_move(&self, robot: &impl Runnable, world: &World) -> Option<Direction> {
+    pub fn get_move(&self, map: &Option<Vec<Vec<Option<Tile>>>>, surroundings: &Vec<Vec<Option<Tile>>>, curr_pos: (usize, usize)) -> Option<Direction> {
         if self.destination.is_none() {
             return None;
         }
-
-        let map = robot_map(world);
         if map.is_none() {
             return None;
         }
 
-        let map = map.unwrap();
-        // let view = robot_view(robot, world);
-        let (view, curr) = where_am_i(robot, world);
-
-        // FIXME just a test
-
         // Adjacent tiles
-        let next_tiles = NLACompass::get_adjacent_tiles(curr, &view);
+        let next_tiles = NLACompass::get_adjacent_tiles(curr_pos, surroundings);
 
         // Directions base costs
         let move_costs_and_cells_to_discover: Vec<Option<(usize, usize)>> = next_tiles.iter().map(|next| {
             let next = next.as_ref()?;
             let next_tile = next.tile?;
             let next_pos = next.pos;
-            let curr = view[curr.0][curr.1].as_ref()?;
+            let curr = surroundings[curr_pos.0][curr_pos.1].as_ref()?;
             Some((
                 self.move_cost(curr, next_tile),
-                NLACompass::get_adjacent_tiles(next_pos, &view).iter().filter(|x| x.is_some()).count()
+                NLACompass::get_adjacent_tiles(next_pos, &surroundings).iter().filter(|x| x.is_some()).count()
             ))
         }).collect();
 

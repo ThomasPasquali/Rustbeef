@@ -4,19 +4,19 @@ use bevy::{
 };
 
 use bevy_extern_events::{queue_event, ExternEventsPlugin};
+use nla_compass::compass::{NLACompass, Destination};
 use rand::{thread_rng, Rng};
 use robotics_lib::{
     energy::Energy,
     event::events::Event,
-    interface::{go, robot_view, Tools},
+    interface::{go, robot_view, Tools, where_am_i, robot_map, Direction},
     runner::{backpack::BackPack, Robot, Runnable, Runner},
     world::{coordinates::Coordinate, tile::Tile, worldgenerator::Generator, World},
 };
 
-use crate::{LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW};
+use crate::{LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW, UP_ARROW};
 
 use super::terraingen::DISCOVERED_WORLD;
-
 #[derive(bv::Resource)]
 pub struct WorldData {
     pub runner: Runner,
@@ -25,11 +25,9 @@ pub struct WorldData {
 #[derive(bv::Resource)]
 pub struct TickTimer(pub bv::Timer);
 
-struct Tool;
-impl Tools for Tool {}
-
 pub struct MyRobot {
     robot: Robot,
+    compass: NLACompass
 }
 
 #[derive(Default, Debug)]
@@ -70,43 +68,70 @@ impl Runnable for MyRobot {
     }
     fn handle_event(&mut self, _event: Event) {}
     fn process_tick(&mut self, world: &mut World) {
+        let (surrounding, pos) = where_am_i(self, world);
+        let map = robot_map(world);
+        // let direction = self.compass.get_move(&map, &surrounding, pos);
+
+        println!("Current position: {:#?}", pos);
+        println!("Surroundings: {:#?}", surrounding);
+        // println!("Map: {:?}", map);
+
         // Go in random direction
         let mut rng = thread_rng();
-        let direction = rng.gen_range(0..=1);
-        let _ = match direction {
-            0 => go(self, world, robotics_lib::interface::Direction::Down),
-            1 => go(self, world, robotics_lib::interface::Direction::Right),
-            _ => go(self, world, robotics_lib::interface::Direction::Right),
+        let d = rng.gen_range(0..=1);
+        let direction = match d {
+            0 => Direction::Down,
+            _ => Direction::Right
         };
-        let tiles = robot_view(self, world);
+        let _ = go(self, world, direction.clone());
+
+        println!("Going: {:#?}\n\n\n", direction.clone());
+
+        // match direction.clone() {
+        //     Some(d) => { go(self, world, match d {
+        //         Direction::Up => Direction::Down,
+        //         Direction::Right => Direction::Right,
+        //         Direction::Down => Direction::Up,
+        //         Direction::Left => Direction::Left
+        //     }); },
+        //     None => { println!("No direction from compass!"); }
+        // }
+        
         // Inform world that map changed
         queue_event(WorldTick {
-            changed_tiles: tiles,
+            changed_tiles: surrounding,
             coordinates: Some((
                 self.get_coordinate().get_col(),
                 self.get_coordinate().get_row(),
             )),
-            direction: match direction {
-                0 => DOWN_ARROW,
-                1 => RIGHT_ARROW,
-                _ => RIGHT_ARROW
+            direction: match Some(direction.clone()) {
+                Some(d) => match d {
+                    Direction::Up => UP_ARROW,
+                    Direction::Right => RIGHT_ARROW,
+                    Direction::Down => DOWN_ARROW,
+                    Direction::Left => LEFT_ARROW
+                },
+                None => '-'
             }
         });
     }
 }
 
 pub fn initialize_runner(mut commands: bv::Commands) {
-    let robot = MyRobot {
+    let mut robot = MyRobot {
         robot: Robot::new(),
+        compass: NLACompass::new()
     };
+    robot.compass.set_destination(Destination::COORDINATE(Coordinate::new(40, 40)));
+
     let mut generator = endless_heights::WorldGenerator {};
-    let tools = vec![Tool];
+    
     DISCOVERED_WORLD.write().unwrap().world = generator.gen().0;
     commands.insert_resource(WorldData {
-        runner: Runner::new(Box::new(robot), &mut generator, tools).unwrap(),
+        runner: Runner::new(Box::new(robot), &mut generator, vec![NLACompass::new()]).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        0.5,
+        10.0,
         bv::TimerMode::Repeating,
     )))
 }
