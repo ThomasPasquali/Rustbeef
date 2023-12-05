@@ -1,5 +1,5 @@
 use crate::components::WorldPlugin;
-use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv};
+use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv, asset::{Handle, AssetServer}, text::Font, ecs::system::Res};
 
 use std::f32::consts::PI;
 
@@ -9,6 +9,11 @@ fn test_main() {
     main();
 }
 
+const LEFT_ARROW:char = '🢀';
+const RIGHT_ARROW:char = '🢂';
+const UP_ARROW:char = '🢁';
+const DOWN_ARROW:char = '🢃';
+
 fn main() {
     bv::App::new()
         .add_plugins(bv::DefaultPlugins)
@@ -17,7 +22,7 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: bv::Commands) {
+fn setup(mut commands: bv::Commands, server: Res<AssetServer>) {
     // camera
     commands
         .spawn(bv::Camera3dBundle {
@@ -38,9 +43,11 @@ fn setup(mut commands: bv::Commands) {
         color: bv::Color::WHITE,
         brightness: 1.0,
     });
+    let handle: Handle<Font> = server.load("NotoSansSymbols2-Regular.ttf");
 
     let style = bv::TextStyle {
-        font_size: 20.,
+        font_size: 60.,
+        font: handle,
         ..bv::default()
     };
     commands
@@ -56,7 +63,7 @@ fn setup(mut commands: bv::Commands) {
         })
         .with_children(|c| {
             c.spawn(bv::TextBundle::from_sections([bv::TextSection::new(
-                "test\n",
+                format!("{} {} {} {}", LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW),
                 style.clone(),
             )]));
         });
