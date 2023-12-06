@@ -16,6 +16,7 @@ pub mod terraingen;
 mod voxel;
 pub use voxel::*;
 mod robot;
+mod controllers;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct WorldPlugin;
