@@ -1,2 +1,3 @@
 pub mod compass;
-mod utils;
+pub mod dijkstra;
+pub mod probabilistic_choice;

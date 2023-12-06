@@ -131,7 +131,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator, vec![NLACompass::new()]).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        10.0,
+        2.0,
         bv::TimerMode::Repeating,
     )))
 }

@@ -1,7 +1,8 @@
 use std::any::TypeId;
 
 use pathfinding::num_traits::Pow;
-use crate::utils::probabilistic_choice::ProbabilisticChoice;
+use crate::probabilistic_choice::ProbabilisticChoice;
+use crate::dijkstra;
 use robotics_lib::{interface::{Tools, Direction, robot_view, robot_map, where_am_i},
                    world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate}, runner::Runnable};
 
