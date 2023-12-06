@@ -1,171 +1,184 @@
 use std::ops::Div;
 use pathfinding::prelude::{build_path, dijkstra_all};
+use robotics_lib::interface::Direction;
+use robotics_lib::interface::robot_map;
+use robotics_lib::world::tile::Tile;
+use robotics_lib::world::World;
+use endless_heights::MAP_SIZE;
 
-fn successors(&n: &u32) -> Vec<(u32, usize)> {
-    let world_size: u32 = 50_u32;
-    let locked: Vec<u32> = vec![];
-    //let price: usize = rand::thread_rng().gen_range(0..1000);
-    let price = 10;
-    let mut result: Vec<(u32, usize)> = Vec::new();
-
-    if n <= world_size.pow(2) {
-        if !locked.contains(&n) {
-            if n <= world_size {
-                if n == 1 {
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    result
-                }
-                else if n == world_size {
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    result
-                }
-                else {
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    result
-                }
-            }
-            else if n >= (world_size.pow(2) - (world_size - 1)) && n <= world_size.pow(2) {
-                if n == world_size.pow(2) - (world_size - 1) {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    result
-                }
-                else if n == world_size.pow(2) {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    result
-                }
-                else {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    result
-                }
-            }
-            else {
-                if n % world_size == 1 {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    result
-                }
-                else if n % world_size == 0 {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    result
-                }
-                else {
-                    if !locked.contains(&(n - world_size)) {
-                        result.push((n - world_size, price));
-                    }
-                    if !locked.contains(&(n + world_size)) {
-                        result.push((n + world_size, price));
-                    }
-                    if !locked.contains(&(n + 1)) {
-                        result.push((n + 1, price));
-                    }
-                    if !locked.contains(&(n - 1)) {
-                        result.push((n - 1, price));
-                    }
-                    result
+pub fn dijkstra_path(start: &(u32, u32), destination: &(u32, u32), mut world: &World) -> Vec<Direction>{
+    let robot_world=robot_map(&mut world).unwrap();
+    fn robot_map_to_numbers(robot_world: Vec<Vec<Option<Tile>>>) -> Vec<u32> {
+        let mut cell_list: Vec<(u32, u32)> = Vec::new();
+        for x in 0..robot_world.len() {
+            for y in 0..robot_world[x].len() {
+                if robot_world[x][y].is_some() {
+                    cell_list.push((x as u32, y as u32))
                 }
             }
         }
-        else { vec![] }
+        let number_list: Vec<u32> = cell_list.iter().map(|cell| convert_to_number(*cell)).collect();
+        number_list
     }
+    fn get_locked(robot_world: Vec<Vec<Option<Tile>>>) -> Vec<u32> {
+        let mut unknown_tiles: Vec<u32> = Vec::new();
+        let known_tiles = robot_map_to_numbers(robot_world);
+        for n in 0..(MAP_SIZE as u32).pow(2) {
+            if !known_tiles.contains(&(n as u32)) {
+                unknown_tiles.push(n as u32);
+            }
+        }
+        unknown_tiles
+    }
+    fn successors(&n: &u32) -> Vec<(u32, usize)> {
+        let price = 10;
+        // let locked = get_locked(robot_world);
+        let locked = vec![];
+        let mut result: Vec<(u32, usize)> = Vec::new();
 
-    else { vec![] }
+        if n <= (MAP_SIZE as u32).pow(2) {
+            if !locked.contains(&n) {
+                if n <= (MAP_SIZE as u32) {
+                    if n == 1 {
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        result
+                    } else if n == (MAP_SIZE as u32) {
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        result
+                    } else {
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        result
+                    }
+                } else if n >= ((MAP_SIZE as u32).pow(2) - ((MAP_SIZE as u32) - 1)) && n <= (MAP_SIZE as u32).pow(2) {
+                    if n == (MAP_SIZE as u32).pow(2) - ((MAP_SIZE as u32) - 1) {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        result
+                    } else if n == (MAP_SIZE as u32).pow(2) {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        result
+                    } else {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        result
+                    }
+                } else {
+                    if n % (MAP_SIZE as u32) == 1 {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        result
+                    } else if n % (MAP_SIZE as u32) == 0 {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        result
+                    } else {
+                        if !locked.contains(&(n - (MAP_SIZE as u32))) {
+                            result.push((n - (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + (MAP_SIZE as u32))) {
+                            result.push((n + (MAP_SIZE as u32), price));
+                        }
+                        if !locked.contains(&(n + 1)) {
+                            result.push((n + 1, price));
+                        }
+                        if !locked.contains(&(n - 1)) {
+                            result.push((n - 1, price));
+                        }
+                        result
+                    }
+                }
+            } else { vec![] }
+        } else { vec![] }
+    };
+    let start_n = convert_to_number(*start);
+    let destination_n = convert_to_number(*destination);
+    let reachables_from_start = dijkstra_all(&start_n, successors);
+    let path = build_path(&destination_n, &reachables_from_start);
+    let direction_list = convert_to_directions(path);
+    return direction_list;
 }
 
-fn bigger_multiple(n: u32, base: u32) -> u32 {
-    (n).div_ceil(base) * base
+fn bigger_multiple(n: u32) -> u32 {
+    (n).div_ceil(MAP_SIZE as u32) * (MAP_SIZE as u32)
 }
-fn smaller_multiple(n: u32, base: u32) -> u32 {
-    if n <= base {
+fn smaller_multiple(n: u32) -> u32 {
+    if n <= (MAP_SIZE as u32) {
         return  0;
     }
-    (n - base).div_ceil(base) * base
+    (n - (MAP_SIZE as u32)).div_ceil(MAP_SIZE as u32) * (MAP_SIZE as u32)
 }
 
-fn convert_to_tuple(n: u32, map_size: u32) -> (u32, u32) {
-    (bigger_multiple(n, map_size).div(map_size), (n - smaller_multiple(n, map_size)))
+fn convert_to_tuple(n: u32) -> (u32, u32) {
+    (bigger_multiple(n).div(MAP_SIZE as u32), (n - smaller_multiple(n)))
 }
 
-fn convert_to_number(cell: (u32, u32), map_size: u32) -> u32 {
-    (cell.0 - 1)*map_size + cell.1
+fn convert_to_number(cell: (u32, u32)) -> u32 {
+    (cell.0 - 1) * (MAP_SIZE as u32) + cell.1
 }
 
-fn convert_to_directions(cells: Vec<u32>, map_size: u32) -> Vec<String> {
-    let mut commands: Vec<String> = Vec::new();
+fn convert_to_directions(cells: Vec<u32>) -> Vec<Direction> {
+    let mut commands: Vec<Direction> = Vec::new();
     for i in 1..cells.len() {
         if cells.get(i) > cells.get(i-1) {
-            if bigger_multiple(*cells.get(i).unwrap(), map_size) == bigger_multiple(*cells.get(i-1).unwrap(), map_size) {
-                commands.push("Right".to_string());
+            if bigger_multiple(*cells.get(i).unwrap()) == bigger_multiple(*cells.get(i-1).unwrap()) {
+                commands.push(Direction::Right);
             }
-            else { commands.push("Down".to_string()); }
+            else { commands.push(Direction::Down); }
         }
         else {
-            if bigger_multiple(*cells.get(i).unwrap(), map_size) == bigger_multiple(*cells.get(i-1).unwrap(), map_size) {
-                commands.push("Left".to_string());
+            if bigger_multiple(*cells.get(i).unwrap()) == bigger_multiple(*cells.get(i-1).unwrap()) {
+                commands.push(Direction::Left);
             }
-            else { commands.push("Up".to_string()); }
+            else { commands.push(Direction::Up); }
         }
     }
     commands
-}
-
-fn main() {
-    let reachables_from_40 = dijkstra_all(&40, successors);
-    let path_40_to_50 = build_path(&50, &reachables_from_40);
-    let cell_path: Vec<_> = path_40_to_50.iter().map(|n| convert_to_tuple(*n, 50)).collect();
-    println!("{:?}", cell_path);
-    let converted_cell_path: Vec<_> = cell_path.iter().map(|n| convert_to_number(*n, 50)).collect();
-    println!("{:?}", converted_cell_path);
-    let commands = convert_to_directions(path_40_to_50, 50);
-    println!("{:?}", commands);
 }

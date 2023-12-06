@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use pathfinding::num_traits::Pow;
 use crate::probabilistic_choice::ProbabilisticChoice;
-use crate::dijkstra;
+use crate::dijkstra::dijkstra_path;
 use robotics_lib::{interface::{Tools, Direction, robot_view, robot_map, where_am_i},
                    world::{World, tile::{Content, Tile, TileType}, coordinates::Coordinate}, runner::Runnable};
 
@@ -84,7 +84,7 @@ impl NLACompass {
         }
     }
 
-    fn move_cost (&self, curr: &Tile, next: &Tile) -> usize {
+    pub fn move_cost (&self, curr: &Tile, next: &Tile) -> usize {
         next.tile_type.properties().cost()              // Cost of entering the tile
         + self.cost_elevation_diff(curr, next)          // Cost of elevation difference (both positive and negative)
         // TODO check if can add next_type_cost
