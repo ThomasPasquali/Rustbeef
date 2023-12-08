@@ -1,3 +1,3 @@
 pub mod compass;
-pub mod dijkstra;
+// FIXME pub mod dijkstra;
 pub mod probabilistic_choice;

@@ -14,7 +14,7 @@ pub struct ProbabilisticChoice {
 }
 impl ProbabilisticChoice {
   pub fn new (weights: Vec<f32>) -> Result<ProbabilisticChoice, String> {
-    let u_weights: Vec<usize> = weights.iter().map(|x| (x * 100.0) as usize).collect();
+    let u_weights: Vec<usize> = ProbabilisticChoice::normalize_to_sum_100(weights);
     let tot: usize = u_weights.iter().sum();
     if tot != 100 {
       return Err(format!("Total ({}) is not 100", tot).to_string());
@@ -29,6 +29,27 @@ impl ProbabilisticChoice {
 
     Ok(ProbabilisticChoice { intervals, rng: rand::thread_rng() })
   }
+
+  fn normalize_to_sum_100(weights: Vec<f32>) -> Vec<usize> {
+    let sum: f32 = weights.iter().sum();
+    let mut normalized_values: Vec<usize> = weights
+        .iter()
+        .map(|value| ((value / sum) * 100.0) as usize)
+        .collect();
+
+    let current_sum: usize = normalized_values.iter().sum();
+    let diff = 100 - current_sum;
+
+    if diff != 0 {
+      let max = normalized_values.iter().max().unwrap();
+      let max_index = normalized_values.iter().position(|v| v == max).unwrap();
+      normalized_values[max_index] += diff;
+    }
+
+    println!("Prob weights:\n{:?}\n{:?}", &weights, &normalized_values);
+    normalized_values
+  }
+
 
   pub fn make (&mut self) -> usize {
     let x: usize = self.rng.gen_range(1..=100);

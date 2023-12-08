@@ -61,7 +61,7 @@ pub fn dijkstra_path(start: &(u32, u32), destination: &(u32, u32), mut world: &W
         unknown_tiles
     }
     // TODO: THIS FUNCTION HAS NOT BEEN TESTED!!!
-    fn successors<'a>(&node: &'a Wrapper) -> Vec<(Wrapper<'a>, i32)>
+    fn successors<'a>(node: &'a Wrapper) -> Vec<(Wrapper<'a>, i32)>
     {
         let mut successors = Vec::new();
         // Iterate over 3x3 adjacent tiles

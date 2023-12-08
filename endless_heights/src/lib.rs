@@ -13,7 +13,7 @@ use strum::IntoEnumIterator;
 
 pub struct WorldGenerator {}
 
-pub const MAP_SIZE: usize = 100;
+pub const MAP_SIZE: usize = 50;
 
 type World = Vec<Vec<Tile>>;
 

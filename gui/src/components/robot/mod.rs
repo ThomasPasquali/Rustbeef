@@ -70,32 +70,41 @@ impl Runnable for MyRobot {
     fn process_tick(&mut self, world: &mut World) {
         let (surrounding, pos) = where_am_i(self, world);
         let map = robot_map(world);
-        // let direction = self.compass.get_move(&map, &surrounding, pos);
 
-        println!("Current position: {:#?}", pos);
-        println!("Surroundings: {:#?}", surrounding);
+        // println!("Current position: {:#?}", pos);
+        // println!("Surroundings: {:#?}", surrounding);
         // println!("Map: {:?}", map);
 
+        let direction = self.compass.get_move(&map, &surrounding, pos);
+
         // Go in random direction
-        let mut rng = thread_rng();
-        let d = rng.gen_range(0..=1);
-        let direction = match d {
-            0 => Direction::Down,
-            _ => Direction::Right
-        };
-        let _ = go(self, world, direction.clone());
+        // let mut rng = thread_rng();
+        // let d = rng.gen_range(0..=1);
+        // let direction = match d {
+        //     0 => Direction::Down,
+        //     _ => Direction::Right
+        // };
 
-        println!("Going: {:#?}\n\n\n", direction.clone());
-
-        // match direction.clone() {
-        //     Some(d) => { go(self, world, match d {
-        //         Direction::Up => Direction::Down,
-        //         Direction::Right => Direction::Right,
-        //         Direction::Down => Direction::Up,
-        //         Direction::Left => Direction::Left
-        //     }); },
-        //     None => { println!("No direction from compass!"); }
-        // }
+        
+        // let _ = go(self, world, direction.clone().unwrap());
+    
+        match direction.clone() {
+            Some(d) => {
+                let res = go(self, world, d.clone());
+                // match d {
+                //     Direction::Up => Direction::Down,
+                //     Direction::Right => Direction::Right,
+                //     Direction::Down => Direction::Up,
+                //     Direction::Left => Direction::Left
+                // }
+                println!("Going: {:#?}", d);
+                if res.is_err() {
+                    println!("Result: {:?}", res);
+                }
+                print!("\n\n\n\n");
+            },
+            None => { println!("No direction from compass!"); }
+        }
         
         // Inform world that map changed
         queue_event(WorldTick {
@@ -104,7 +113,7 @@ impl Runnable for MyRobot {
                 self.get_coordinate().get_col(),
                 self.get_coordinate().get_row(),
             )),
-            direction: match Some(direction.clone()) {
+            direction: match direction.clone() {
                 Some(d) => match d {
                     Direction::Up => UP_ARROW,
                     Direction::Right => RIGHT_ARROW,
@@ -131,7 +140,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator, vec![NLACompass::new()]).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        2.0,
+        1.0,
         bv::TimerMode::Repeating,
     )))
 }
