@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use bevy::{
     app::{Plugin, Startup},
     prelude as bv,
@@ -11,7 +13,7 @@ use robotics_lib::{
     event::events::Event,
     interface::{go, robot_view, Tools, where_am_i, robot_map, Direction},
     runner::{backpack::BackPack, Robot, Runnable, Runner},
-    world::{coordinates::Coordinate, tile::Tile, worldgenerator::Generator, World},
+    world::{coordinates::Coordinate, tile::Tile, world_generator::Generator, World},
 };
 
 use crate::{LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW, UP_ARROW};
@@ -101,6 +103,16 @@ impl Runnable for MyRobot {
                 if res.is_err() {
                     println!("Result: {:?}", res);
                 }
+
+                // FIXME stop if climbing
+                let (_, new_pos) = where_am_i(self, world);
+                let from = map.as_ref().unwrap()[pos.0][pos.1].as_ref().unwrap();
+                let to = map.as_ref().unwrap()[new_pos.0][new_pos.1].as_ref().unwrap();
+                println!("Gone from {:?}[type: {:?}, elevation: {}] to {:?}[type: {:?}, elevation: {}]", pos, from.tile_type, from.elevation, new_pos, to.tile_type, to.elevation);
+                if (from.elevation as i32 - to.elevation as i32).abs() >=2 {
+                    println!("CLIMBING! exiting...");
+                    exit(1);
+                }
                 print!("\n\n\n\n");
             },
             None => { println!("No direction from compass!"); }
@@ -136,8 +148,9 @@ pub fn initialize_runner(mut commands: bv::Commands) {
     let mut generator = endless_heights::WorldGenerator {};
     
     DISCOVERED_WORLD.write().unwrap().world = generator.gen().0;
+    let mut tools = vec![NLACompass::new()];
     commands.insert_resource(WorldData {
-        runner: Runner::new(Box::new(robot), vec![NLACompass::new()]).unwrap(),
+        runner: Runner::new(Box::new(robot), &mut generator).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
         0.5,

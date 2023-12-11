@@ -7,10 +7,9 @@ use rand::Rng;
 use robotics_lib::world::environmental_conditions::EnvironmentalConditions;
 use robotics_lib::world::environmental_conditions::WeatherType;
 use robotics_lib::world::tile::Content;
-use robotics_lib::world::tile::Content::*;
 use robotics_lib::world::tile::Tile;
 use robotics_lib::world::tile::TileType;
-use robotics_lib::world::worldgenerator::Generator;
+use robotics_lib::world::world_generator::Generator;
 use strum::IntoEnumIterator;
 
 pub struct WorldGenerator {}
@@ -51,7 +50,7 @@ impl Generator for WorldGenerator {
             (0, 0),
             EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1).unwrap(),
             10.0,
-            std::option::Option::None
+            None
         )
     }
 }
