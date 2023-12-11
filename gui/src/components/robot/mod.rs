@@ -118,7 +118,8 @@ impl Runnable for MyRobot {
             None => { println!("No direction from compass!"); }
         }
         
-        // Inform world that map changed
+        println!("row: {} col: {}", self.get_coordinate().get_row(), self.get_coordinate().get_col());
+        // Inform GUI that map changed
         queue_event(WorldTick {
             changed_tiles: surrounding,
             coordinates: Some((
@@ -153,7 +154,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        5.0,
+        0.5,
         bv::TimerMode::Repeating,
     )))
 }

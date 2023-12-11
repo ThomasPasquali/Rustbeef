@@ -3,6 +3,8 @@ use crate::World;
 use crate::MAP_SIZE;
 use std::fmt::Display;
 
+use rand::SeedableRng;
+use rand::rngs::StdRng;
 use rand::{thread_rng, Rng};
 use rand_distr::{Distribution, Uniform};
 
@@ -111,7 +113,7 @@ fn sample_gaussians(
     stretch: f32,
     mut wideness: f32,
 ) {
-    let mut rng = thread_rng();
+    let mut rng = StdRng::seed_from_u64(2);
     for _ in 0..bumpiness {
         let angle = std::f32::consts::PI * rng.gen_range(0.0..2.0);
         if stretch <= wideness {
