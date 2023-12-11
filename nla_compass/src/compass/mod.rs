@@ -41,7 +41,7 @@ pub struct NLACompassParams {
 impl Default for NLACompassParams {
     fn default() -> Self {
         NLACompassParams {
-            COST_NEG_EL_DIFF_POW: 10.0 / 2.0, // 1.5
+            COST_NEG_EL_DIFF_POW: 3.0 / 2.0, // 1.5
             COST_NEXT_NEXT_POW: 1.0 / 2.0,   // 0.5 (sqrt)
             COST_DISC_TILES_PROPORTION: 1    // CANNNOT be 0
         }
