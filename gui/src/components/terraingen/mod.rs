@@ -1,7 +1,7 @@
 use std::sync::RwLock;
 
 use endless_heights::MAP_SIZE;
-use ilattice::{extent::Extent};
+use ilattice::extent::Extent;
 
 use bevy::math::{IVec3, UVec3};
 use once_cell::sync::Lazy;
@@ -24,15 +24,15 @@ pub struct TerrainGenerator {
 
 impl TerrainGenerator {
     pub fn generate(&self, chunk_key: IVec3, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
-        if chunk_key.x < MAP_SIZE as i32 && chunk_key.x >= 0 && chunk_key.y == 0 {
-            for (x, row) in self.world
-                [chunk_key.x as usize..(chunk_key.x as usize + CHUNK_LENGTH_U).clamp(0, MAP_SIZE)]
+        if chunk_key.z < MAP_SIZE as i32 && chunk_key.z >= 0 && chunk_key.y == 0 {
+            for (z, row) in self.world
+                [chunk_key.z as usize..(chunk_key.z as usize + CHUNK_LENGTH_U).clamp(0, MAP_SIZE)]
                 .iter()
                 .enumerate()
             {
-                if chunk_key.z <= MAP_SIZE as i32 && chunk_key.z >= 0 {
-                    for (z, tile) in row[chunk_key.z as usize
-                        ..(chunk_key.z as usize + CHUNK_LENGTH_U).clamp(0, MAP_SIZE)]
+                if chunk_key.x <= MAP_SIZE as i32 && chunk_key.x >= 0 {
+                    for (x, tile) in row[chunk_key.x as usize
+                        ..(chunk_key.x as usize + CHUNK_LENGTH_U).clamp(0, MAP_SIZE)]
                         .iter()
                         .enumerate()
                     {

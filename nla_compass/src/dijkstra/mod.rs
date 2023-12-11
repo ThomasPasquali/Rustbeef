@@ -186,9 +186,10 @@ pub fn dijkstra_path(start: &(u32, u32), destination: &(u32, u32), mut world: &W
     let start_n = convert_to_number(*start);
     let destination_n = convert_to_number(*destination);
 
+    let start = Wrapper { world: &robot_world, row: start.0 as usize, col: start.1 as usize };
     // Rewritten to take the wrapper as input
     let reachables_from_start = dijkstra_all(
-        &Wrapper { world: &robot_world, row: start.0 as usize, col: start.1 as usize }, 
+        &start, 
         successors
     );
 

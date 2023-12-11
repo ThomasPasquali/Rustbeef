@@ -1,6 +1,8 @@
 pub mod height;
 pub mod utils;
 
+use std::collections::HashMap;
+
 use rand::Rng;
 use robotics_lib::world::environmental_conditions::EnvironmentalConditions;
 use robotics_lib::world::environmental_conditions::WeatherType;
@@ -18,7 +20,7 @@ pub const MAP_SIZE: usize = 50;
 type World = Vec<Vec<Tile>>;
 
 impl Generator for WorldGenerator {
-    fn gen(&mut self) -> (World, (usize, usize), EnvironmentalConditions, f32) {
+    fn gen(&mut self) -> (World, (usize, usize), EnvironmentalConditions, f32, Option<HashMap<Content, f32>>) {
         let mut rng = rand::thread_rng();
         let mut world = Vec::new();
         for _ in 0..MAP_SIZE {
@@ -49,6 +51,7 @@ impl Generator for WorldGenerator {
             (0, 0),
             EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1).unwrap(),
             10.0,
+            std::option::Option::None
         )
     }
 }
