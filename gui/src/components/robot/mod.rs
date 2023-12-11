@@ -109,7 +109,7 @@ impl Runnable for MyRobot {
                 let from = map.as_ref().unwrap()[pos.0][pos.1].as_ref().unwrap();
                 let to = map.as_ref().unwrap()[new_pos.0][new_pos.1].as_ref().unwrap();
                 println!("Gone from {:?}[type: {:?}, elevation: {}] to {:?}[type: {:?}, elevation: {}]", pos, from.tile_type, from.elevation, new_pos, to.tile_type, to.elevation);
-                if (from.elevation as i32 - to.elevation as i32).abs() >=2 {
+                if (from.elevation as i32 - to.elevation as i32).abs() >= 5 {
                     println!("CLIMBING! exiting...");
                     exit(1);
                 }
@@ -153,7 +153,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         runner: Runner::new(Box::new(robot), &mut generator).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
-        0.5,
+        5.0,
         bv::TimerMode::Repeating,
     )))
 }
