@@ -9,7 +9,7 @@ edition = "2021"
 rand = "0.8.5"
 robotics_lib = { path = "../Robotic-Lib" }
 endless_heights = { path = "../endless_heights" }
-#nla_compass = { path = "../nla_compass" }
+nla_compass = { path = "../nla_compass" }
 strum = "0.25.0"
 bevy = "0.12.1"
 bevy_extern_events = "0.3.0"

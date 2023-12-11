@@ -4,7 +4,7 @@ use bevy::{
 };
 
 use bevy_extern_events::{queue_event, ExternEventsPlugin};
-// use nla_compass::compass::{NLACompass, Destination};
+use nla_compass::compass::{NLACompass, Destination};
 use rand::{thread_rng, Rng};
 use robotics_lib::{
     energy::Energy,
@@ -27,7 +27,7 @@ pub struct TickTimer(pub bv::Timer);
 
 pub struct MyRobot {
     robot: Robot,
-    // compass: NLACompass
+    compass: NLACompass
 }
 
 #[derive(Default, Debug)]
@@ -129,15 +129,15 @@ impl Runnable for MyRobot {
 pub fn initialize_runner(mut commands: bv::Commands) {
     let mut robot = MyRobot {
         robot: Robot::new(),
-        // compass: NLACompass::new()
+        compass: NLACompass::new()
     };
-    // robot.compass.set_destination(Destination::COORDINATE(Coordinate::new(40, 40)));
+    robot.compass.set_destination(Destination::COORDINATE(Coordinate::new(40, 40)));
 
     let mut generator = endless_heights::WorldGenerator {};
     
     DISCOVERED_WORLD.write().unwrap().world = generator.gen().0;
     commands.insert_resource(WorldData {
-        runner: Runner::new(Box::new(robot), &mut generator).unwrap()//, vec![NLACompass::new()]).unwrap(),
+        runner: Runner::new(Box::new(robot), vec![NLACompass::new()]).unwrap(),
     });
     commands.insert_resource(TickTimer(bv::Timer::from_seconds(
         0.5,
