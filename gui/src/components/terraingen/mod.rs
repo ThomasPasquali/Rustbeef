@@ -24,7 +24,7 @@ pub struct TerrainGenerator {
 
 impl TerrainGenerator {
     pub fn generate(&self, chunk_key: IVec3, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
-        if chunk_key.z < MAP_SIZE as i32 && chunk_key.z >= 0 && chunk_key.y == 0 {
+        if chunk_key.z < MAP_SIZE as i32 && chunk_key.z >= 0 && chunk_key.y >= 0 {
             for (z, row) in self.world
                 [chunk_key.z as usize..(chunk_key.z as usize + CHUNK_LENGTH_U).clamp(0, MAP_SIZE)]
                 .iter()
@@ -43,7 +43,7 @@ impl TerrainGenerator {
                                     y: 0,
                                     z: z as u32,
                                 },
-                                shape: UVec3::new(1, tile.elevation as u32 + 1, 1),
+                                shape: UVec3::new(1, (tile.elevation as i32 + 1 - chunk_key.y as i32).clamp(0, 32) as u32, 1),
                             },
                             match tile.tile_type {
                                 TileType::Grass => Grass::into_voxel(),

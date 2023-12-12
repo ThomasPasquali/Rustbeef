@@ -294,7 +294,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource::<ChunkLoadRadius>(ChunkLoadRadius {
             horizontal: 6,
-            vertical: 2,
+            vertical: 10,
         })
         .init_resource::<ChunkEntities>()
         .insert_resource(CurrentLocalPlayerChunk {
