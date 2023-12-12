@@ -110,16 +110,16 @@ fn sample_gaussians(
     bumpiness: u32,
     scale: f32,
     limit: usize,
-    stretch: f32,
-    mut wideness: f32,
+    min_variance: f32,
+    max_variance: f32,
 ) {
     let mut rng = StdRng::seed_from_u64(2);
     for _ in 0..bumpiness {
         let angle = std::f32::consts::PI * rng.gen_range(0.0..2.0);
-        if stretch <= wideness {
-            wideness = stretch - 0.5
-        }
-        let uniform_sigma = Uniform::<f32>::from(wideness..stretch);
+        // if stretch <= wideness {
+        //     wideness = stretch - 0.5
+        // }
+        let uniform_sigma = Uniform::<f32>::from(min_variance..max_variance);
         let uniform_mean = Uniform::<f32>::from(0.0..limit as f32);
         let mean_x = uniform_mean.sample(&mut rng);
         let mean_y = uniform_mean.sample(&mut rng);
@@ -146,11 +146,11 @@ pub fn create_height_map(
     bumpiness: u32,
     scale: f32,
     interpolation: f32,
-    stretch: f32,
-    wideness: f32,
+    min_variance: f32,
+    max_variance: f32,
 ) -> HeightMap {
     let mut gaussians = Vec::<Gaussian>::new();
-    sample_gaussians(&mut gaussians, bumpiness, scale, size, stretch, wideness);
+    sample_gaussians(&mut gaussians, bumpiness, scale, size, min_variance, max_variance);
 
     let mut height_map = height_map!(0; (size, size));
     let mut elevations = Vec::<usize>::new();
@@ -166,8 +166,10 @@ pub fn create_height_map(
                 // elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
                 gaussian_values.push(gaussian.get_value_at(i as f32, j as f32) as usize);
             }
+            // Taking max value for each position
             gaussian_values.sort();
             elevation = gaussian_values[gaussian_values.len() - 1];
+            // Adding some value of each other gaussian
             for v in 0..gaussian_values.len() - 1 {
                 elevation += (interpolation * v as f32) as usize;
             }

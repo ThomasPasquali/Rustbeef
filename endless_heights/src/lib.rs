@@ -2,6 +2,7 @@ pub mod height;
 pub mod utils;
 
 use std::collections::HashMap;
+use std::iter::MapWhile;
 
 use rand::Rng;
 use robotics_lib::world::environmental_conditions::EnvironmentalConditions;
@@ -36,15 +37,19 @@ impl Generator for WorldGenerator {
             }
             world.push(row);
         }
-        let bumpiness = 100;
-        let scale = 10.0;
-        let interpolation = 1.0;
-        let stretch = 3.0;
-        let wideness = 2.0;
+
+        // Create different elevations for each tile
+        // PARAMETERS:
+        let amount_mountains = (MAP_SIZE/5) as u32;
+        let scale = MAP_SIZE as f32;
+        let interpolation = 0.5;
+        let max_variance = 20 as f32;
+        let min_variance = 2 as f32;
 
         let height_map =
-            height::create_height_map(MAP_SIZE, bumpiness, scale, interpolation, stretch, wideness);
+            height::create_height_map(MAP_SIZE, amount_mountains, scale, interpolation, min_variance, max_variance);
         height::bump_world(&mut world, height_map);
+
         (
             world,
             (0, 0),
