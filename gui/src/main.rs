@@ -1,4 +1,4 @@
-use crate::components::WorldPlugin;
+use crate::components::{WorldPlugin, WorldPluginNoRobot};
 use bevy::{core_pipeline::fxaa::Fxaa, hierarchy::BuildChildren, prelude as bv, asset::{Handle, AssetServer}, text::Font, ecs::{system::Res, component::Component}};
 
 use std::f32::consts::PI;
