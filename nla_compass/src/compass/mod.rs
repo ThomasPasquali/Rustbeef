@@ -1,8 +1,9 @@
+
 use pathfinding::num_traits::Pow;
 use crate::probabilistic_choice::ProbabilisticChoice;
 // FIXME use crate::dijkstra::dijkstra_path;
 use robotics_lib::{interface::{Tools, Direction},
-                   world::{tile::{Content, Tile, TileType}, coordinates::Coordinate}};
+                   world::{tile::{Content, Tile, TileType}, coordinates::Coordinate}, utils::in_bounds};
 
 
 /// Compass destination
@@ -199,11 +200,19 @@ impl NLACompass {
             println!("Discover {:?}: {:?} ({})", next_pos, NLACompass::get_adjacent_tiles(next_pos, robot_map), NLACompass::get_adjacent_tiles(next_pos, robot_map).iter().filter(|x| x.is_ok() && (x.as_ref().unwrap().is_none() || x.as_ref().unwrap().as_ref().unwrap().tile.is_none())).count());
             println!("\n");
             let discover = NLACompass::get_move_discover_tiles_count(next_pos, robot_map);
+            // if discover > 0 { // Removing move that do not discover
+            //     Some((
+            //     self.move_cost_estimation(curr, next_tile),
+            //     discover 
+            // )) } else { None }
+            if !NLACompass::pos_in_bounds((next_pos.0 as i32, next_pos.1 as i32), robot_map.len(), robot_map[0].len()){
+                return None;
+            }
             if discover > 0 { // Removing move that do not discover
-                Some((
-                self.move_cost_estimation(curr, next_tile),
-                discover 
-            )) } else { None }
+                    return Some((self.move_cost_estimation(curr, next_tile), discover));
+            }else{
+                return Some((20,0));
+            }
         }).collect();
         println!("Costs + discover {:?}", &move_costs_and_cells_to_discover);
 
@@ -243,7 +252,7 @@ impl NLACompass {
                     j += 1;
                 }
                 let direction = directions[direction_i].clone();
-                println!("Choice: {:?}, idx {}  (estimated cost + discover: {:?})", &direction, direction_i, &move_costs_and_cells_to_discover[if j >= 4 {directions.len()} else {j}]);
+                // println!("Choice: {:?}, idx {}  (estimated cost + discover: {:?})", &direction, direction_i, &move_costs_and_cells_to_discover[if j >= 4 {directions.len()} else {j}]);
                 return Some(direction);
             },
             Err(e) => {

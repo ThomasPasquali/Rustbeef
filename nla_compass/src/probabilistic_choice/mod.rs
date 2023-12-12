@@ -1,6 +1,8 @@
 use std::ops::RangeInclusive;
 use rand::{Rng, rngs::ThreadRng};
 
+
+const DEFAULT_MIN_PROB: f32 = 0.01;
 fn fold_sum_option_vec<T, U, F> (v: &Vec<Option<U>>, transformer: F) -> T 
 where T: std::iter::Sum,
       U: Copy,
@@ -73,6 +75,7 @@ impl ProbabilisticChoice {
       .collect();
 
     let mut choice = ProbabilisticChoice::new(normalized_proportions.iter().filter_map(|x| x.map(|v| v)).collect())?;
+    // let mut choice = ProbabilisticChoice::new(normalized_proportions.iter().map(|x| if let Some(value) = x {*value} else {DEFAULT_MIN_PROB}).collect())?;
     Ok(choice.make())
   }
 
