@@ -1,56 +1,54 @@
-
-use pathfinding::num_traits::Pow;
-use crate::probabilistic_choice::ProbabilisticChoice;
 // FIXME use crate::dijkstra::dijkstra_path;
 use robotics_lib::{interface::{Tools, Direction},
-                   world::{tile::{Content, Tile, TileType}, coordinates::Coordinate}, utils::in_bounds};
+                   world::{tile::{Content, Tile, TileType}, coordinates::Coordinate as RoboticCoord}};
 
+use crate::compass::helpers::in_bounds;
 
-/// Compass destination
-/// 
-/// (at least seen)
-/// # Usage
-/// ```rust
-/// ```
-///
-/// # Examples
-/// ```rust
-/// 
-/// ```
-#[derive(Clone)]
+use self::helpers::{get_closest_content, Coordinate};
+
+// Helpers for compass tool
+pub(crate) mod helpers;
+
+/// Defines the destination of the compass.
+/// If the last field of the variant is set to `true`, the compass will also explore new tiles
+/// it hasn't alredy been to.
+/// Otherwise, it will always stick to tiles it has already explored (if the destination is
+/// unreachable you'll get an error when you call `get_move()`).
 pub enum Destination {
-    /// Content (content, min_r, new)
-    CONTENT(Content, Option<usize>, Option<bool>),
-    /// Tile type (tiletype, min_r, new)
-    TILE_TYPE(TileType, Option<usize>, Option<bool>),
-    /// Coordinate (coordinate)
-    COORDINATE(Coordinate),
+    /// Content (content, min_amount, explore_new)
+    /// DISCUSSION NEEDED: content already contains information about number of items
+    Content(Content, bool),
+    /// Tile type (tiletype, explore_new)
+    TileType(TileType, bool),
+    /// Coordinate (coordinate, explore_new)
+    Coordinate((usize, usize), bool),
 }
 
-#[derive(Debug)]
-struct TileCordinates<'a> {
-    tile: Option<&'a Tile>,
-    pos: (usize, usize)
+pub enum MoveError {
+    NoDestination,
+    NoContent,
+    InvalidCurrPosition,
+    InvalidDestCoordinate
 }
 
 #[derive(Clone)]
 pub struct NLACompassParams {
-    COST_NEG_EL_DIFF_POW: f32,
-    COST_NEXT_NEXT_POW: f32,
-    COST_DISC_TILES_PROPORTION: usize
+    // Cost assigned for going downhill. Used so that the robot avoids losing the elevation potential it gained
+    pub(crate) cost_neg_el_diff_pow: f32,
+    // Cost assigned to the importance of the tiles after this move
+    pub(crate) cost_disc_tiles_proportion: usize
 }
 impl Default for NLACompassParams {
     fn default() -> Self {
         NLACompassParams {
-            COST_NEG_EL_DIFF_POW: 3.0 / 2.0, // 1.5
-            COST_NEXT_NEXT_POW: 1.0 / 2.0,   // 0.5 (sqrt)
-            COST_DISC_TILES_PROPORTION: 1    // CANNNOT be 0
+            cost_neg_el_diff_pow: 3.0 / 2.0, // 1.5
+            cost_disc_tiles_proportion: 1    // CANNNOT be 0
         }
     }
 }
 
-
-#[derive(Clone)]
+/// Represents the compass tool.
+/// See the `Destination` enum for information on how to configure the destination.
 pub struct NLACompass {
     params: NLACompassParams,
     destination: Option<Destination>
@@ -66,209 +64,60 @@ impl NLACompass {
     pub fn set_params (&mut self, params: NLACompassParams) {
         self.params = params;
     }
-
-    fn cost_elevation_diff (&self, curr: &Tile, next: &Tile) -> usize {
-        let diff = (next.elevation as i32) - (curr.elevation as i32);
-        let uphill = diff >= 0;
-        if uphill {
-            diff.pow(2) as usize
-        } else {
-            (diff as f32).pow(self.params.COST_NEG_EL_DIFF_POW) as usize
-        }
+    pub fn get_params (&self) -> &NLACompassParams {
+        &self.params
     }
-
-    fn cost_tile_entrance (&self, tile: &Tile) -> usize {
-        tile.tile_type.properties().cost()
-    }
-
-    pub fn move_cost_estimation (&self, curr: &Tile, next: &Tile) -> usize {
-        println!("Cost estimation: next_in {}, el_diff {}", self.cost_tile_entrance(next), self.cost_elevation_diff(curr, next));
-        self.cost_tile_entrance(next)       // Cost of entering the tile
-        + self.cost_elevation_diff(curr, next)    // Cost of elevation difference (both positive and negative)
-        // TODO check if can add   next_type_cost
-        // TODO cost_next_next
-    }
-
-    fn get_adjacent_tile<'a> (curr: (usize, usize), map: &'a Vec<Vec<Option<Tile>>>, direction: &Direction) -> Result<Option<TileCordinates<'a>>, String> {
-        if curr.0 >= map.len() || curr.1 >= map[0].len() {
-            return Err("Invalud curr parameter".to_string());
-        }
-        match direction {
-            Direction::Left => {
-                let x = curr.0;
-                let y = curr.1.checked_sub(1);
-                match y {
-                    Some(y) => Ok(Some(TileCordinates { tile: map[x][y].as_ref(), pos: (x, y) })),
-                    None => Err("y underflow".to_string()),
-                }
-            },
-            Direction::Down => {
-                let x = curr.0 + 1;
-                let y = curr.1;
-                if x < map.len() { 
-                    Ok(Some(TileCordinates { tile: map[x][y].as_ref(), pos: (x, y) }))
-                } else {
-                    Err("x overflow".to_string())
-                }
-            },
-            Direction::Right => {
-                let x = curr.0;
-                let y = curr.1 + 1;
-                if y < map[x].len() {
-                    Ok(Some(TileCordinates { tile: map[x][y].as_ref(), pos: (x, y) }))
-                } else {
-                    Err("y overflow".to_string())
-                }
-            },
-            Direction::Up => {
-                let x = curr.0.checked_sub(1);
-                let y = curr.1;
-                match x {
-                    Some(x) => Ok(Some(TileCordinates { tile: map[x][y].as_ref(), pos: (x, y) })),
-                    None => Err("x underflow".to_string()),
-                }
-            },
-        }
-        
-    }
-
-    fn ordered_directions () -> Vec<Direction> {
-        vec![Direction::Left, Direction::Down, Direction::Right, Direction::Up]
-    }
-
-    fn get_adjacent_tiles<'a> (curr: (usize, usize), map: &'a Vec<Vec<Option<Tile>>>) -> Vec<Result<Option<TileCordinates<'a>>, String>> {
-        NLACompass::ordered_directions().iter().map(|dir| {
-            NLACompass::get_adjacent_tile(curr, &map, dir)     
-        }).collect()
-    }
-
-    fn pos_in_bounds (pos: (i32, i32), x_bound: usize, y_bound: usize) -> bool {
-        pos.0 >= 0 && pos.1 >=0 && pos.0 < x_bound as i32 && pos.1 < y_bound as i32
-    }
-
-    fn get_move_discover_tiles_count<'a> (pos: (usize, usize), map: &'a Vec<Vec<Option<Tile>>>) -> usize {
-        // .iter().filter(|x| x.is_ok() && (x.as_ref().unwrap().is_none() || x.as_ref().unwrap().as_ref().unwrap().tile.is_none())).count()
-        let mut dicovered = 0;
-        for x_off in -1..=1 {
-            for y_off in -1..=1 {
-                let disc_pos: (i32, i32) = (pos.0 as i32 + x_off, pos.1 as i32 + y_off);
-                if NLACompass::pos_in_bounds(disc_pos, map.len(), map[0].len()) // Only works with square maps
-                    && map[disc_pos.0 as usize][disc_pos.1 as usize].is_none() { 
-                    dicovered += 1;
-                }
-            }
-        }
-        dicovered
-    }
-
-    fn get_move_for_content (&self, c: &Content, min_r: &Option<usize>, new: &Option<bool>) -> Option<Direction> {
-        // TODO
-        Some(Direction::Up)
-    }
-
-    fn get_move_for_tiletype (&self, t: &TileType, min_r: &Option<usize>, new: &Option<bool>) -> Option<Direction> {
-        // TODO
-        Some(Direction::Up)
-    }
-
-    fn get_move_for_coordinate (&self, c: &Coordinate) -> Option<Direction> {
-        // TODO
-        Some(Direction::Up)
-    }
-
-    pub fn get_move(&self, map: &Option<Vec<Vec<Option<Tile>>>>, surroundings: &Vec<Vec<Option<Tile>>>, curr_pos: (usize, usize)) -> Option<Direction> {
-        if self.destination.is_none() {
-            return None;
-        }
-        if map.is_none() {
-            return None;
-        }
-        let robot_map = map.as_ref().unwrap();
-        // FIXME this is just a test for destination unknown moves
-
-        // Adjacent tiles
-        let next_tiles = NLACompass::get_adjacent_tiles(curr_pos, robot_map);
-        println!("Next tile: {:?}", &next_tiles);
-
-        // Directions base costs
-        let move_costs_and_cells_to_discover: Vec<Option<(usize, usize)>> = next_tiles.iter().map(|next| {
-            if next.is_err() { return None; }
-            let next = next.as_ref().unwrap().as_ref()?;
-            let next_tile = next.tile?;
-            let next_pos = next.pos;
-            let curr = robot_map[curr_pos.0][curr_pos.1].as_ref()?;
-            println!("Discover {:?}: {:?} ({})", next_pos, NLACompass::get_adjacent_tiles(next_pos, robot_map), NLACompass::get_adjacent_tiles(next_pos, robot_map).iter().filter(|x| x.is_ok() && (x.as_ref().unwrap().is_none() || x.as_ref().unwrap().as_ref().unwrap().tile.is_none())).count());
-            println!("\n");
-            let discover = NLACompass::get_move_discover_tiles_count(next_pos, robot_map);
-            // if discover > 0 { // Removing move that do not discover
-            //     Some((
-            //     self.move_cost_estimation(curr, next_tile),
-            //     discover 
-            // )) } else { None }
-            if !NLACompass::pos_in_bounds((next_pos.0 as i32, next_pos.1 as i32), robot_map.len(), robot_map[0].len()){
-                return None;
-            }
-            if discover > 0 { // Removing move that do not discover
-                    return Some((self.move_cost_estimation(curr, next_tile), discover));
-            }else{
-                return Some((20,0));
-            }
-        }).collect();
-        println!("Costs + discover {:?}", &move_costs_and_cells_to_discover);
-
-        let mut costs: Vec<Option<usize>> = vec![];
-        let cost_tot: usize = move_costs_and_cells_to_discover.iter()
-            .filter_map(|c| c.map(|(cost, _)| cost))
-            .sum();
-        for c in move_costs_and_cells_to_discover.iter() {
-            let mut cost = None;
-            if c.is_some() {
-                let c = c.unwrap();
-                cost = Some(c.0 + (cost_tot / (c.1 + self.params.COST_DISC_TILES_PROPORTION)));
-            }
-            costs.push(cost);
-        }
-        println!("Costs {:?}", &costs);
-
-        // Change costs proportionality
-        costs = costs.into_iter().map(|c| match c {
-            Some(cost) => Some(cost.pow(3)),
-            None => None
-        }).collect();
-
-        let choice = ProbabilisticChoice::inverse_wheighted_choice(&costs);
-        match choice {
-            Ok(direction_i) => {
-                let mut i: usize = 0;
-                let mut j: usize = 0;
-                let mut directions = NLACompass::ordered_directions();
-                // Remove impossible moves
-                while i < directions.len() && j < move_costs_and_cells_to_discover.len() {
-                    if move_costs_and_cells_to_discover[j].is_none() {
-                        directions.remove(i);
-                    } else {
-                        i += 1;
-                    }
-                    j += 1;
-                }
-                let direction = directions[direction_i].clone();
-                // println!("Choice: {:?}, idx {}  (estimated cost + discover: {:?})", &direction, direction_i, &move_costs_and_cells_to_discover[if j >= 4 {directions.len()} else {j}]);
-                return Some(direction);
-            },
-            Err(e) => {
-              println!("{e}");
-              return None;
-            }
-        }
-
-        // match self.destination.as_ref().unwrap() {
-        //     Destination::CONTENT(c, min_r, new) => self.get_move_for_content(c, min_r, new),
-        //     Destination::TILE_TYPE(c, min_r, new) => self.get_move_for_tiletype(c, min_r, new),
-        //     Destination::COORDINATE(c) => self.get_move_for_coordinate(c)
-        // }
-    }
-
-    pub fn set_destination(&mut self, destination: Destination) {
+    pub fn set_destination (&mut self, destination: Destination) {
         self.destination = Some(destination);
+    }
+    pub fn get_destination (&self) -> &Destination {
+        self.get_destination()
+    }
+    pub fn clear_destination(&mut self) {
+        self.destination = None;
+    }
+
+    fn get_move_for_content (&self, map: &Vec<Vec<Option<Tile>>>, c: &Content, explore_new: bool, dst: &Destination, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
+        if explore_new {
+            // TODO Probabilistic
+            Ok(Direction::Up)
+        } else {
+            if let Some(coordinate) = get_closest_content(map, c, curr_pos) {
+                // TODO Dijkstra
+                Ok(Direction::Up)
+            } else {
+                Err(MoveError::NoContent)
+            }
+        }
+    }
+
+    fn get_move_for_tiletype (&self, t: &TileType, explore_new: bool, dst: &Destination) -> Result<Direction, MoveError> {
+        // TODO
+        Ok(Direction::Up)
+    }
+
+    fn get_move_for_coordinate (&self, map: &Vec<Vec<Option<Tile>>>, c: &(usize, usize), explore_new: bool, dst: &Destination) -> Result<Direction, MoveError> {
+        let c = Coordinate::new(c.0, c.1);
+        // TODO
+        if !in_bounds(map, &c) {
+            return Err(MoveError::InvalidDestCoordinate)
+        }
+        Ok(Direction::Up)
+    }
+
+    /// Returns best direction according to set destination and parameters
+    pub fn get_move(&self, map: &Vec<Vec<Option<Tile>>>, curr_pos: &RoboticCoord) -> Result<Direction, MoveError> {
+        let curr_pos = Coordinate::new(curr_pos.get_row(), curr_pos.get_col());
+        let destination = self.destination.as_ref().ok_or(MoveError::NoDestination)?;
+        
+        if !in_bounds(map, &curr_pos) || map[curr_pos.row][curr_pos.col].is_none() {
+            return Err(MoveError::InvalidCurrPosition)
+        }
+
+        match destination {
+            Destination::Content(c, explore_new) => self.get_move_for_content(map, &c, *explore_new, &destination, &curr_pos),
+            Destination::TileType(t, explore_new) => self.get_move_for_tiletype(&t, *explore_new, &destination),
+            Destination::Coordinate(c, explore_new) => self.get_move_for_coordinate(map, &c, *explore_new, &destination)
+        }
     }
 }

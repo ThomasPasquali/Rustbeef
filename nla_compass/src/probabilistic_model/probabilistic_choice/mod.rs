@@ -1,14 +1,10 @@
 use std::ops::RangeInclusive;
 use rand::{Rng, rngs::ThreadRng};
 
+use super::Choice;
+
 
 const DEFAULT_MIN_PROB: f32 = 0.01;
-fn fold_sum_option_vec<T, U, F> (v: &Vec<Option<U>>, transformer: F) -> T 
-where T: std::iter::Sum,
-      U: Copy,
-      F: Fn(U) -> T {
-  v.iter().filter_map(|c| c.map(|v| transformer(v))).sum::<T>()
-}
 
 pub struct ProbabilisticChoice {
   rng: ThreadRng,
@@ -63,18 +59,18 @@ impl ProbabilisticChoice {
     0
   }
 
-  pub fn inverse_wheighted_choice (costs: &Vec<Option<usize>>) -> Result<usize, String> {
-    let tot: usize = fold_sum_option_vec(costs, |c| c);
-    let inverse_proportions: Vec<Option<f32>> = costs.iter()
-      .map(|c| c.map(|cost| (tot as f32) / (cost as f32)))
+  pub fn inverse_weighted_choice (costs: &Vec<Choice>) -> Result<usize, String> {
+    let tot: usize = costs.iter().sum();
+    let inverse_proportions: Vec<f32> = costs.iter()
+      .map(|cost| (tot as f32) / (*cost as f32))
       .collect();
 
-    let propostions_tot = fold_sum_option_vec(&inverse_proportions, |c| c);
-    let normalized_proportions: Vec<Option<f32>> = inverse_proportions.iter()
-      .map(|c| c.map(|cost| (cost as f32) / (propostions_tot as f32)))
+    let proportions_tot: f32 = inverse_proportions.iter().sum();
+    let normalized_proportions: Vec<f32> = inverse_proportions.iter()
+      .map(|cost| (*cost as f32) / (proportions_tot as f32))
       .collect();
 
-    let mut choice = ProbabilisticChoice::new(normalized_proportions.iter().filter_map(|x| x.map(|v| v)).collect())?;
+    let mut choice = ProbabilisticChoice::new(normalized_proportions)?;
     // let mut choice = ProbabilisticChoice::new(normalized_proportions.iter().map(|x| if let Some(value) = x {*value} else {DEFAULT_MIN_PROB}).collect())?;
     Ok(choice.make())
   }

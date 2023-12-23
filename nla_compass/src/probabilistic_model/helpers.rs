@@ -1,0 +1,111 @@
+use pathfinding::num_traits::Pow;
+use robotics_lib::{world::tile::Tile, interface::Direction};
+
+use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate}};
+
+#[derive(Debug)]
+pub(crate) struct TileWithDirection<'a> {
+    pub(crate) tile: &'a Tile,
+    pub(crate) dir: Direction,
+    pub(crate) pos: Coordinate
+}
+
+fn cost_tile_entrance (tile: &Tile) -> usize {
+    tile.tile_type.properties().cost()
+}
+
+fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
+    let diff = (next.elevation as i32) - (curr.elevation as i32);
+    let uphill = diff >= 0;
+    if uphill {
+        diff.pow(2) as f32
+    } else {
+        (diff as f32).pow(params.cost_neg_el_diff_pow)
+    }
+}
+
+pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
+    println!("Cost estimation: next_in {}, el_diff {}", cost_tile_entrance(next), cost_elevation_diff(curr, next, params));
+    cost_tile_entrance(next) as f32      // Cost of entering the tile
+    + cost_elevation_diff(curr, next, params)    // Cost of elevation difference (both positive and negative)
+    // TODO check if can add   next_type_cost
+    // TODO cost_next_next
+}
+
+fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, direction: &Direction) -> Option<TileWithDirection<'a>> {
+    match direction {
+        Direction::Left => {
+            let row = curr.row;
+            let col = curr.col.checked_sub(1);
+
+            col.and_then(|col| {
+                map[row][col].as_ref().and_then(|tile| {
+                    Some(TileWithDirection { tile, dir: Direction::Left, pos: Coordinate{row, col} })
+                })
+            })
+        },
+        Direction::Down => {
+            let row = curr.row + 1;
+            let col = curr.col;
+            if row < map.len() {
+                map[row][col].as_ref().and_then(|tile| {
+                    Some(TileWithDirection { tile, dir: Direction::Down, pos: Coordinate{row, col} })
+                })
+            } else {
+                None
+            }
+        },
+        Direction::Right => {
+            let row = curr.row;
+            let col = curr.col + 1;
+            if col < map[row].len() {
+                map[row][col].as_ref().and_then(|tile| {
+                    Some(TileWithDirection { tile, dir: Direction::Right, pos: Coordinate{row, col} })
+                })
+            } else {
+                None
+            }
+        },
+        Direction::Up => {
+            let row = curr.row.checked_sub(1);
+            let col = curr.col;
+
+            row.and_then(|row| {
+                map[row][col].as_ref().and_then(|tile| {
+                    Some(TileWithDirection { tile, dir: Direction::Up, pos: Coordinate{row, col} })
+                })
+            })
+        },
+    }
+}
+
+pub(crate) fn ordered_directions () -> Vec<Direction> {
+    vec![Direction::Left, Direction::Down, Direction::Right, Direction::Up]
+}
+
+/// Returns left, right, top and bottom adjacent tiles
+pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> Vec<Option<TileWithDirection<'a>>> {
+    ordered_directions().iter().map(|dir| {
+        get_adjacent_tile(curr, &map, dir)     
+    }).collect()
+}
+
+// Returns number of undiscovered tiles around the tile at position `pos`
+pub(crate) fn get_undiscovered_tiles_count<'a> (pos: Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> usize {
+    let mut discovered = 0;
+    for row_off in -1..=1 {
+        for col_off in -1..=1 {
+            let Some(row) = pos.row.checked_add_signed(row_off) else {
+                break;
+            };
+            let Some(col) = pos.row.checked_add_signed(col_off) else {
+                break;
+            };
+            if in_bounds(map, &Coordinate::new(row, col))
+                && map[row][col].is_none() { 
+                discovered += 1;
+            }
+        }
+    }
+    discovered
+}
