@@ -1,7 +1,9 @@
 [package]
-name = "nla_compass"
+name = "RustBeef_NLACompass"
 version = "0.1.0"
 edition = "2021"
+authors = ["Thomas Pasquali", "Salvatore Andaloro", "Claudio Foroncelli", "Florian Kandra"]
+publish = ["kellnr"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
