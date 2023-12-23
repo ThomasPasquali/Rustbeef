@@ -1,14 +1,7 @@
 mod helpers;
-use std::collections::HashMap;
 use std::hash::Hasher;
 use std::ops::Div;
-use pathfinding::prelude::{build_path, dijkstra_all};
-use robotics_lib::interface::Direction;
-use robotics_lib::interface::robot_map;
-use robotics_lib::world::coordinates::Coordinate;
-use robotics_lib::world::tile::Tile;
 use core::hash::Hash;
-use std::rc::Rc;
 use self::helpers::get_cost;
 use self::helpers::Wrapper;
 
