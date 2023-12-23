@@ -56,7 +56,7 @@ Available `Destination` options:
 The destination can be changed at any moment, since the path computation is done at every step. The destination can be reset manually by calling `clear_destination()`.
 
 #### Asking for directions
-Directions can be retrieved by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: (usize, usize))` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`. Refer to the docs for additional details.
+The suggested direction can be retrieved by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: (usize, usize))` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`. Refer to the docs for additional details.
 
 ### Advanced configuration
 Usually the default coefficients should work well with any world. Manual tuning can be done by creating a `NLACompassParams` object and passing it to the `set_params(params: NLACompassParams)` function of the `NLACompass` object. Refer to the docs for additional details.
