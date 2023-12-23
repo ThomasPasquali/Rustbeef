@@ -33,8 +33,8 @@ fn init_runner() {
         robot: Robot::new(),
         compass: NLACompass::new()
     };
-    // Configure a coordinate as destination. The robot will explore new tiles while doing so (last field set to `true`)
-    let destination = Destination::Coordinate((100, 100), true);
+    // Configure a tiletype as destination. The robot will explore new tiles while doing so (last field set to `true`)
+    let destination = Destination::TileType(TileType::Sand, true);
     robot.compass.set_destination(destination);
 
     let run = Runner::new(Box::new(robot), &mut WorldGenerator::init()).unwrap();
