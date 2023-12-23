@@ -1,9 +1,6 @@
-use log::debug;
 use robotics_lib::{world::tile::Tile, interface::Direction};
 
-use crate::{compass::{MoveError, NLACompassParams, helpers::Coordinate}, probabilistic_model::helpers::{get_adjacent_tiles, inverse_weighted_choice}};
-
-use self::helpers::TileWithDirection;
+use crate::{compass::{MoveError, NLACompassParams, helpers::{Coordinate, TileWithCordinates}}, probabilistic_model::helpers::{get_adjacent_tiles, inverse_weighted_choice}};
 
 mod helpers;
 
@@ -41,7 +38,7 @@ pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate
 }
 
 // Returns cost to go to that tile and number of undiscovered tiles that can be reached from that tile
-fn get_possible_direction(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, params: &NLACompassParams, tile_with_dir: &Option<TileWithDirection>) -> Option<PossibleDirection> {
+fn get_possible_direction(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, params: &NLACompassParams, tile_with_dir: &Option<TileWithCordinates>) -> Option<PossibleDirection> {
     let tile_with_dir = tile_with_dir.as_ref()?;
     let tile = tile_with_dir.tile;
     let tile_pos = &tile_with_dir.pos;

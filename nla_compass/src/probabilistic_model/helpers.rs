@@ -2,16 +2,9 @@ use pathfinding::num_traits::Pow;
 use rand::{thread_rng, seq::SliceRandom};
 use robotics_lib::{world::tile::Tile, interface::Direction};
 
-use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate}, MoveError};
+use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate, TileWithCordinates}, MoveError};
 
 use super::PossibleDirection;
-
-#[derive(Debug)]
-pub(crate) struct TileWithDirection<'a> {
-    pub(crate) tile: &'a Tile,
-    pub(crate) dir: Direction,
-    pub(crate) pos: Coordinate
-}
 
 fn cost_tile_entrance (tile: &Tile) -> usize {
     tile.tile_type.properties().cost()
@@ -35,7 +28,7 @@ pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompas
     // TODO cost_next_next
 }
 
-fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, direction: &Direction) -> Option<TileWithDirection<'a>> {
+fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, direction: &Direction) -> Option<TileWithCordinates<'a>> {
     match direction {
         Direction::Left => {
             let row = curr.row;
@@ -43,7 +36,7 @@ fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, di
 
             col.and_then(|col| {
                 map[row][col].as_ref().and_then(|tile| {
-                    Some(TileWithDirection { tile, dir: Direction::Left, pos: Coordinate{row, col} })
+                    Some(TileWithCordinates { tile, pos: Coordinate{row, col} })
                 })
             })
         },
@@ -52,7 +45,7 @@ fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, di
             let col = curr.col;
             if row < map.len() {
                 map[row][col].as_ref().and_then(|tile| {
-                    Some(TileWithDirection { tile, dir: Direction::Down, pos: Coordinate{row, col} })
+                    Some(TileWithCordinates { tile, pos: Coordinate{row, col} })
                 })
             } else {
                 None
@@ -63,7 +56,7 @@ fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, di
             let col = curr.col + 1;
             if col < map[row].len() {
                 map[row][col].as_ref().and_then(|tile| {
-                    Some(TileWithDirection { tile, dir: Direction::Right, pos: Coordinate{row, col} })
+                    Some(TileWithCordinates { tile, pos: Coordinate{row, col} })
                 })
             } else {
                 None
@@ -75,7 +68,7 @@ fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, di
 
             row.and_then(|row| {
                 map[row][col].as_ref().and_then(|tile| {
-                    Some(TileWithDirection { tile, dir: Direction::Up, pos: Coordinate{row, col} })
+                    Some(TileWithCordinates { tile, pos: Coordinate{row, col} })
                 })
             })
         },
@@ -87,7 +80,7 @@ pub(crate) fn ordered_directions () -> Vec<Direction> {
 }
 
 /// Returns left, right, top and bottom adjacent tiles
-pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> Vec<Option<TileWithDirection<'a>>> {
+pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> Vec<Option<TileWithCordinates<'a>>> {
     ordered_directions().iter().map(|dir| {
         get_adjacent_tile(curr, &map, dir)     
     }).collect()

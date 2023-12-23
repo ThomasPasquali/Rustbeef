@@ -126,7 +126,7 @@ impl NLACompass {
         }
     }
 
-    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
+    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, _explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
         if !in_bounds(map, &c) {
             return Err(MoveError::InvalidDestCoordinate)
         }
