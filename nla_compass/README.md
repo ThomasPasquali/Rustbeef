@@ -43,7 +43,7 @@ fn init_runner() {
 ```
 
 ## Usage
-
+Note: complete description for all functions and structs can be found in the docs inside the `compass` module.
 #### Configuring the destination
 
 The destination can be set by calling the `set_destination(destination: Destination)` function of the `NLACompass` object. Once the destination has been reached, the destination will be reset.
@@ -56,14 +56,14 @@ Available `Destination` options:
 The destination can be changed at any moment, since the path computation is done at every step. The destination can be reset manually by calling `clear_destination()`.
 
 #### Asking for directions
-Directions can be retrieved by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate)` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`.
+Directions can be retrieved by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate)` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`. Refer to the docs for additional details.
 
 ### Advanced configuration
-Usually the default coefficients should work well with any world. Manual tuning can be done by creating a `NLACompassParams` object and passing it to the `set_params(params: NLACompassParams)` function of the `NLACompass` object.
+Usually the default coefficients should work well with any world. Manual tuning can be done by creating a `NLACompassParams` object and passing it to the `set_params(params: NLACompassParams)` function of the `NLACompass` object. Refer to the docs for additional details.
 
 ## Group members
 
-- [Thomas Pasquali](mailto:thomas.pasquali@studenti.unitn.it) [[Telegram]](https://t.me/thom_pasqui)  (group leader)
+- [Thomas Pasquali](mailto:thomas.pasquali@studenti.unitn.it) [\[Telegram\]](https://t.me/thom_pasqui)  (group leader)
 - [Salvatore Andaloro](mailto:salvatore.andaloro@studenti.unitn.it)
 - [Claudio Foroncelli](mailto:claudio.foroncelli@studenti.unitn.it)
 - [Florian Kandra](mailto:florian.kandra@studenti.unitn.it)

@@ -10,10 +10,6 @@ use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 pub(crate) mod helpers;
 
 /// Defines the destination of the compass.
-/// If the last field of the variant is set to `true`, the compass will also explore new tiles
-/// it hasn't alredy been to.
-/// Otherwise, it will always stick to tiles it has already explored (if the destination is
-/// unreachable you'll get an error when you call `get_move()`).
 pub enum Destination {
     /// Content (content, min_amount, explore_new)
     /// DISCUSSION NEEDED: content already contains information about number of items
@@ -24,6 +20,7 @@ pub enum Destination {
     Coordinate((usize, usize), bool),
 }
 
+/// Errors returned by `getMove()`.
 pub enum MoveError {
     // The destination has not been set
     NoDestination,
@@ -41,12 +38,13 @@ pub enum MoveError {
     NotImplemented
 }
 
+/// Advanced configuration options for tuning weigths.
 #[derive(Clone)]
 pub struct NLACompassParams {
-    // Cost assigned for going downhill. Used so that the robot avoids losing the elevation potential it gained
-    pub(crate) cost_neg_el_diff_pow: f32,
-    // Cost assigned to the importance of the tiles after this move
-    pub(crate) cost_disc_tiles_proportion: usize
+    /// Cost assigned for going downhill. Used so that the robot avoids losing the elevation potential it gained. Defaults to 1.5.
+    pub cost_neg_el_diff_pow: f32,
+    /// Cost assigned to the number of undiscovered tiles for the next move. Defaults to 1. CANNOT be 0.
+    pub cost_disc_tiles_proportion: usize
 }
 impl Default for NLACompassParams {
     fn default() -> Self {
@@ -67,22 +65,32 @@ pub struct NLACompass {
 impl Tools for NLACompass { }
 
 impl NLACompass {
+    /// Initilizes a new compass with the default parameters.
     pub fn new () -> Self {
         NLACompass { destination: None, params: NLACompassParams::default() }
     }
 
+    /// Sets advanced configuration parameters.
     pub fn set_params (&mut self, params: NLACompassParams) {
         self.params = params;
     }
+
+    /// Returns advanced configuration parameters.
     pub fn get_params (&self) -> &NLACompassParams {
         &self.params
     }
+
+    /// Sets the destination of the compass.
     pub fn set_destination (&mut self, destination: Destination) {
         self.destination = Some(destination);
     }
+
+    /// Returns the destination of the compass.
     pub fn get_destination (&self) -> &Option<Destination> {
         &self.destination
     }
+
+    /// Clears the destination of the compass (sets it to `None`).
     pub fn clear_destination(&mut self) {
         self.destination = None;
     }
@@ -116,7 +124,7 @@ impl NLACompass {
         Err(MoveError::NotImplemented)
     }
 
-    /// Returns best direction according to set destination and parameters
+    /// Returns best direction according to set destination and parameters.
     pub fn get_move(&self, map: &Vec<Vec<Option<Tile>>>, curr_pos: &RoboticCoord) -> Result<Direction, MoveError> {
         let curr_pos = Coordinate::new(curr_pos.get_row(), curr_pos.get_col());
         let destination = self.destination.as_ref().ok_or(MoveError::NoDestination)?;
