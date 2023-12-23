@@ -25,11 +25,20 @@ pub enum Destination {
 }
 
 pub enum MoveError {
+    // The destination has not been set
     NoDestination,
+    // There is no matching content in the explored world
     NoContent,
+    // There is no matching tiletype in the explored world
+    NoTileType,
+    // The current position does not point to an explored tile
     InvalidCurrPosition,
+    // The destination coordinate is invalid
     InvalidDestCoordinate,
-    NoAvailableMove
+    // The algorithm could not find any move to make
+    NoAvailableMove,
+    // The functionality has not been implemented yet :(
+    NotImplemented
 }
 
 #[derive(Clone)]
@@ -84,7 +93,7 @@ impl NLACompass {
         } else {
             let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent);
             // TODO Dijkstra
-            Ok(Direction::Up)
+            Err(MoveError::NotImplemented)
         }
     }
 
@@ -92,9 +101,9 @@ impl NLACompass {
         if explore_new {
             probabilistic_model::get_move(map, curr_pos, &self.params)
         } else {
-            let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoContent);
+            let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoTileType);
             // TODO Dijkstra
-            Ok(Direction::Up)
+            Err(MoveError::NotImplemented)
         }
     }
 
@@ -104,7 +113,7 @@ impl NLACompass {
             return Err(MoveError::InvalidDestCoordinate)
         }
         // TODO Dijkstra
-        Ok(Direction::Up)
+        Err(MoveError::NotImplemented)
     }
 
     /// Returns best direction according to set destination and parameters

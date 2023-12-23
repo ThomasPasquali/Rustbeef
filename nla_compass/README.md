@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
-# Never lost again compass 🧭
+# Never lost again compass by Rustbeef 🧭
 
-This tool suggests the least expensive path to reach to a set destination.
+This tool suggests the least expensive path to reach a set destination.
 
 If the tiles to reach the destination have been already discovered before, the tool will suggest the least expensive path using Dijkstra's algorithm.
 
@@ -51,19 +51,19 @@ The destination can be set by calling the `set_destination(destination: Destinat
 Available `Destination` options:
 - `Content(Content, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given content. If `bool` is false, the robot will scan the known world and find the closest matching content. Then it will suggest the least expensive path.
 - `TileType(TileType, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given tile type. If `bool` is false, the robot will scan the known world and find the closest matching tile type. Then it will suggest the least expensive path.
-- `Coordinate((usize, usize), bool)`: if `bool` is true, the tool will suggest a path generally going to the destination coordinate (but preferring the least expensive directions). If `bool` is false, the robot will suggest the least expensive path known a-priori. (note: the coordinate follows the general convention used in `RoboticLib`: the first `usize` is the row and second is the `col`).
+- `Coordinate((usize, usize), bool)`: if `bool` is true, the tool will suggest a path going to the destination coordinate (but preferring the least expensive directions). If `bool` is false, the robot will suggest the least expensive path known a-priori. (note: the coordinate follows the general convention used in `RoboticLib`: the first `usize` is the row and second is the `col`).
 
 The destination can be changed at any moment, since the path computation is done at every step. The destination can be reset manually by calling `clear_destination()`.
 
 #### Asking for directions
-Directions can be asked by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate)` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`.
+Directions can be retrieved by calling the `get_move(map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate)` function of the `NLACompass` object. If everything is configured correctly, the function should return a `Result` with a `Direction`. Otherwise it will return one of the errors defined in `MoveError`.
 
 ### Advanced configuration
 Usually the default coefficients should work well with any world. Manual tuning can be done by creating a `NLACompassParams` object and passing it to the `set_params(params: NLACompassParams)` function of the `NLACompass` object.
 
-### Group components
+## Group members
 
-- [Thomas Pasquali](mailto:thomas.pasquali@studenti.unitn.it) (group leader)
+- [Thomas Pasquali](mailto:thomas.pasquali@studenti.unitn.it) [[Telegram]](https://t.me/thom_pasqui)  (group leader)
 - [Salvatore Andaloro](mailto:salvatore.andaloro@studenti.unitn.it)
 - [Claudio Foroncelli](mailto:claudio.foroncelli@studenti.unitn.it)
 - [Florian Kandra](mailto:florian.kandra@studenti.unitn.it)
