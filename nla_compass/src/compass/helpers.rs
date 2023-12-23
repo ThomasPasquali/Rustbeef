@@ -32,7 +32,7 @@ pub(crate) fn get_closest_content(map: &Vec<Vec<Option<Tile>>>, content: &Conten
     flatten_2d_map(map).filter_map(|el| {
         // Filter only specified content
         el.and_then(|tile| {
-            if tile.tile.content == *content {Some(tile.pos)}
+            if tile.tile.content.to_default() == content.to_default() {Some(tile.pos)}
             else { None }
         })
     }).min_by(|el1, el2| {

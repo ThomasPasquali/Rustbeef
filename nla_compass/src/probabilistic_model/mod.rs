@@ -17,14 +17,14 @@ struct PossibleDirection {
 pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, params: &NLACompassParams) -> Result<Direction, MoveError> {
 
     let adj_tiles = get_adjacent_tiles(curr_pos, robot_map);
-    debug!("Adjacent tiles: {:?}", &adj_tiles);
+    println!("Adjacent tiles: {:?}", &adj_tiles);
 
     // Vector containing cost and number of undiscovered tiles that can be reached
     let mut possible_directions: Vec<PossibleDirection> = adj_tiles.iter().filter_map(|next| {
         get_possible_direction(robot_map, curr_pos, params, next)
     }).collect();
 
-    debug!("Costs + discover {:?}", &possible_directions);
+    println!("Costs + discover {:?}", &possible_directions);
 
     let cost_tot: f32 = possible_directions.iter()
         .map(|PossibleDirection{direction: _, cost, undiscovered: _}| cost)

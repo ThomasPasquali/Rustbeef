@@ -29,7 +29,6 @@ fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> 
 
 /// Cost associated with moving from tile to another
 pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
-    println!("Cost estimation: next_in {}, el_diff {}", cost_tile_entrance(next), cost_elevation_diff(curr, next, params));
     cost_tile_entrance(next) as f32      // Cost of entering the tile
     + cost_elevation_diff(curr, next, params)    // Cost of elevation difference (both positive and negative)
     // TODO check if can add   next_type_cost

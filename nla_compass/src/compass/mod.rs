@@ -1,9 +1,8 @@
 use crate::dijkstra;
 use robotics_lib::{interface::{Tools, Direction},
-                   world::{tile::{Content, Tile, TileType}, coordinates::Coordinate as RoboticCoord}};
+                   world::tile::{Content, Tile, TileType}};
 
 use crate::{compass::helpers::in_bounds, probabilistic_model};
-use crate::dijkstra::get_move_for_coordinate;
 
 use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 
@@ -13,8 +12,7 @@ pub(crate) mod helpers;
 /// Defines the destination of the compass.
 #[derive(Clone)]
 pub enum Destination {
-    /// Content (content, min_amount, explore_new)
-    /// DISCUSSION NEEDED: content already contains information about number of items
+    /// Content (content, explore_new). Quantity field is ignored.
     Content(Content, bool),
     /// Tile type (tiletype, explore_new)
     TileType(TileType, bool),

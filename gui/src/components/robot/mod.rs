@@ -13,7 +13,7 @@ use robotics_lib::{
     event::events::Event,
     interface::{go, robot_view, Tools, where_am_i, robot_map, Direction},
     runner::{backpack::BackPack, Robot, Runnable, Runner},
-    world::{coordinates::Coordinate, tile::Tile, world_generator::Generator, World},
+    world::{coordinates::Coordinate, tile::{Tile, TileType}, world_generator::Generator, World},
 };
 
 use crate::{LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW, UP_ARROW};
@@ -92,7 +92,6 @@ impl Runnable for MyRobot {
                     println!("CLIMBING! exiting...");
                     exit(1);
                 }
-                print!("\n\n\n\n");
             },
             Err(_) => { println!("No direction from compass!"); }
         }
@@ -123,7 +122,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         robot: Robot::new(),
         compass: NLACompass::new()
     };
-    robot.compass.set_destination(Destination::Coordinate((40, 40), true));
+    robot.compass.set_destination(Destination::TileType(TileType::Sand, true));
 
     let mut generator = endless_heights::WorldGenerator {};
     
