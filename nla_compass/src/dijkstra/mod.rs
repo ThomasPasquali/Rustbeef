@@ -35,9 +35,7 @@ impl Clone for Wrapper {
     }
 }
 
-impl Copy for Wrapper { }
-
-fn successors(&node: &Wrapper) -> Vec<(Wrapper, usize)> {
+fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
     let mut successors = Vec::new();
     // Iterate over 3x3 adjacent tiles
     for row in [node.row-1, node.row+1] {
