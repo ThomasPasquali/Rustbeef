@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 # Never lost again compass 🧭
 
-This tool suggests the optimal path to get to a set destination by choosing the least expensive directions at every step.
+This tool suggests the least expensive path to reach to a set destination.
 
 If the tiles to reach the destination have been already discovered before, the tool will suggest the least expensive path using Dijkstra's algorithm.
 

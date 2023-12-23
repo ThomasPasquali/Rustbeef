@@ -1,27 +1,13 @@
 use pathfinding::num_traits::Pow;
 use robotics_lib::{world::tile::Tile, interface::Direction};
 
-use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate}};
+use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate, cost_tile_entrance, cost_elevation_diff}};
 
 #[derive(Debug)]
 pub(crate) struct TileWithDirection<'a> {
     pub(crate) tile: &'a Tile,
     pub(crate) dir: Direction,
     pub(crate) pos: Coordinate
-}
-
-fn cost_tile_entrance (tile: &Tile) -> usize {
-    tile.tile_type.properties().cost()
-}
-
-fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
-    let diff = (next.elevation as i32) - (curr.elevation as i32);
-    let uphill = diff >= 0;
-    if uphill {
-        diff.pow(2) as f32
-    } else {
-        (diff as f32).pow(params.cost_neg_el_diff_pow)
-    }
 }
 
 pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
