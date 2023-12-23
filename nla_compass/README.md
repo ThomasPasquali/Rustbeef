@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 # Never lost again compass by Rustbeef 🧭
 
-This tool suggests the least expensive path to reach a set destination.
+This tool suggests directions to reach a set destination.
 
 If the tiles to reach the destination have been already discovered before, the tool will suggest the least expensive path using Dijkstra's algorithm.
 
