@@ -42,15 +42,15 @@ fn init_runner() {
 }
 ```
 
-### Usage
+## Usage
 
 #### Configuring the destination
 
 The destination can be set by calling the `set_destination(destination: Destination)` function of the `NLACompass` object. Once the destination has been reached, the destination will be reset.
 
 Available `Destination` options:
-- `Content(Content, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given content. If `bool` is false, the robot will scan the known world and find the closest content. Then it will suggest the least expensive path.
-- `TileType(TileType, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given tile type. If `bool` is false, the robot will scan the known world and find the closest tile type. Then it will suggest the least expensive path.
+- `Content(Content, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given content. If `bool` is false, the robot will scan the known world and find the closest matching content. Then it will suggest the least expensive path.
+- `TileType(TileType, bool)`: if `bool` is true, the tool will suggest random paths (but preferring the least expensive directions) until it finds the given tile type. If `bool` is false, the robot will scan the known world and find the closest matching tile type. Then it will suggest the least expensive path.
 - `Coordinate((usize, usize), bool)`: if `bool` is true, the tool will suggest a path generally going to the destination coordinate (but preferring the least expensive directions). If `bool` is false, the robot will suggest the least expensive path known a-priori. (note: the coordinate follows the general convention used in `RoboticLib`: the first `usize` is the row and second is the `col`).
 
 The destination can be changed at any moment, since the path computation is done at every step. The destination can be reset manually by calling `clear_destination()`.
