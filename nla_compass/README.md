@@ -5,7 +5,7 @@ This tool suggests the optimal path to get to a set destination by choosing the 
 
 If the tiles to reach the destination have been already discovered before, the tool will suggest the least expensive path using Dijkstra's algorithm.
 
-Otherwise, the tool will weight the possible options accoring to the configured coefficients and suggest a direction.
+Otherwise, the tool will weight the possible options according to the configured coefficients and suggest a direction.
 
 The tool uses no energy :)
 
