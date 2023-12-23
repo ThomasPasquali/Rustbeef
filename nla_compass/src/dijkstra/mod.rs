@@ -10,32 +10,7 @@ use robotics_lib::world::tile::Tile;
 use core::hash::Hash;
 use std::rc::Rc;
 use self::helpers::get_cost;
-
-struct Wrapper {
-    world: Rc<Vec<Vec<Option<Tile>>>>,
-    row: usize,
-    col: usize
-}
-impl PartialEq for Wrapper {
-    fn eq(&self, other: &Self) -> bool {
-        self.row == other.row && self.col == other.col
-    }
-}
-impl Eq for Wrapper {}
-impl Hash for Wrapper {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        (self.row, self.col).hash(state);
-    }
-}
-impl Clone for Wrapper {
-    fn clone(&self) -> Self {
-        Self {
-            world: Rc::clone(&self.world),
-            row: self.row,
-            col: self.col
-        }
-    }
-}
+use self::helpers::Wrapper;
 
 fn successors(&node: &Wrapper) -> Vec<(Wrapper, usize)> {
     let mut successors = Vec::new();
