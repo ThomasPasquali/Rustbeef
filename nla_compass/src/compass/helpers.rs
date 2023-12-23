@@ -1,7 +1,5 @@
 use robotics_lib::world::tile::{Tile, Content};
 
-use super::NLACompassParams;
-
 #[derive(Debug)]
 pub(crate) struct TileWithCordinates<'a> {
     pub(crate) tile: &'a Tile,
@@ -55,18 +53,4 @@ pub(crate) fn get_closest_content(map: &Vec<Vec<Option<Tile>>>, content: &Conten
 /// Returns `true` if passed coords are inside world
 pub(crate) fn in_bounds(map: &Vec<Vec<Option<Tile>>>, coord: &Coordinate) -> bool {
     coord.row < map.len() && coord.col < map[0].len()
-}
-
-pub(crate) fn cost_tile_entrance (tile: &Tile) -> usize {
-    tile.tile_type.properties().cost()
-}
-
-pub(crate) fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
-    let diff = (next.elevation as i32) - (curr.elevation as i32);
-    let uphill = diff >= 0;
-    if uphill {
-        diff.pow(2) as f32
-    } else {
-        (diff as f32).powf(params.cost_neg_el_diff_pow)
-    }
 }
