@@ -1,4 +1,4 @@
-use robotics_lib::world::tile::{Tile, Content};
+use robotics_lib::world::tile::{Tile, Content, TileType};
 
 #[derive(Debug)]
 pub(crate) struct TileWithCordinates<'a> {
@@ -29,16 +29,7 @@ impl Coordinate {
 /// Returns coordinate of closest tile with matching content
 pub(crate) fn get_closest_content(map: &Vec<Vec<Option<Tile>>>, content: &Content, pos: &Coordinate) -> Option<Coordinate> {
     // Convert 2D vec to list with row and col index
-    map.iter().enumerate().flat_map(|(row, el)| {
-        el.iter().enumerate().map(move |(col, el)| {
-            el.as_ref().and_then(|tile| {
-                Some(TileWithCordinates {
-                    pos: Coordinate::new(row, col),
-                    tile: tile
-                })
-            })
-        })
-    }).filter_map(|el| {
+    flatten_2d_map(map).filter_map(|el| {
         // Filter only specified content
         el.and_then(|tile| {
             if tile.tile.content == *content {Some(tile.pos)}
@@ -48,6 +39,35 @@ pub(crate) fn get_closest_content(map: &Vec<Vec<Option<Tile>>>, content: &Conten
         // Get content located at minimum distance
         pos.distance(el1).total_cmp(&pos.distance(el2))
     })
+}
+
+/// Returns coordinate of closest tile with matching tiletype
+pub(crate) fn get_closest_tiletype(map: &Vec<Vec<Option<Tile>>>, tiletype: &TileType, pos: &Coordinate) -> Option<Coordinate> {
+    // Convert 2D vec to list with row and col index
+    flatten_2d_map(map).filter_map(|el| {
+        // Filter only specified content
+        el.and_then(|tile| {
+            if tile.tile.tile_type == *tiletype {Some(tile.pos)}
+            else { None }
+        })
+    }).min_by(|el1, el2| {
+        // Get content located at minimum distance
+        pos.distance(el1).total_cmp(&pos.distance(el2))
+    })
+}
+
+// Converts 2D map to vector of tiles with coordinates field
+fn flatten_2d_map(map: &Vec<Vec<Option<Tile>>>) -> impl Iterator<Item = Option<TileWithCordinates>> {
+    return map.iter().enumerate().flat_map(|(row, el)| {
+        el.iter().enumerate().map(move |(col, el)| {
+            el.as_ref().and_then(|tile| {
+                Some(TileWithCordinates {
+                    pos: Coordinate::new(row, col),
+                    tile
+                })
+            })
+        })
+    });
 }
 
 /// Returns `true` if passed coords are inside world

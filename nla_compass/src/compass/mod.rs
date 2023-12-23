@@ -2,9 +2,9 @@
 use robotics_lib::{interface::{Tools, Direction},
                    world::{tile::{Content, Tile, TileType}, coordinates::Coordinate as RoboticCoord}};
 
-use crate::compass::helpers::in_bounds;
+use crate::{compass::helpers::in_bounds, probabilistic_model};
 
-use self::helpers::{get_closest_content, Coordinate};
+use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 
 // Helpers for compass tool
 pub(crate) mod helpers;
@@ -28,7 +28,8 @@ pub enum MoveError {
     NoDestination,
     NoContent,
     InvalidCurrPosition,
-    InvalidDestCoordinate
+    InvalidDestCoordinate,
+    NoAvailableMove
 }
 
 #[derive(Clone)]
@@ -70,8 +71,8 @@ impl NLACompass {
     pub fn set_destination (&mut self, destination: Destination) {
         self.destination = Some(destination);
     }
-    pub fn get_destination (&self) -> &Destination {
-        self.get_destination()
+    pub fn get_destination (&self) -> &Option<Destination> {
+        &self.destination
     }
     pub fn clear_destination(&mut self) {
         self.destination = None;
@@ -79,29 +80,30 @@ impl NLACompass {
 
     fn get_move_for_content (&self, map: &Vec<Vec<Option<Tile>>>, c: &Content, explore_new: bool, dst: &Destination, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
         if explore_new {
-            // TODO Probabilistic
-            Ok(Direction::Up)
+            probabilistic_model::get_move(map, curr_pos, &self.params)
         } else {
-            if let Some(coordinate) = get_closest_content(map, c, curr_pos) {
-                // TODO Dijkstra
-                Ok(Direction::Up)
-            } else {
-                Err(MoveError::NoContent)
-            }
+            let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent);
+            // TODO Dijkstra
+            Ok(Direction::Up)
         }
     }
 
-    fn get_move_for_tiletype (&self, t: &TileType, explore_new: bool, dst: &Destination) -> Result<Direction, MoveError> {
-        // TODO
-        Ok(Direction::Up)
+    fn get_move_for_tiletype (&self, map: &Vec<Vec<Option<Tile>>>, t: &TileType, explore_new: bool, dst: &Destination, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
+        if explore_new {
+            probabilistic_model::get_move(map, curr_pos, &self.params)
+        } else {
+            let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoContent);
+            // TODO Dijkstra
+            Ok(Direction::Up)
+        }
     }
 
     fn get_move_for_coordinate (&self, map: &Vec<Vec<Option<Tile>>>, c: &(usize, usize), explore_new: bool, dst: &Destination) -> Result<Direction, MoveError> {
         let c = Coordinate::new(c.0, c.1);
-        // TODO
         if !in_bounds(map, &c) {
             return Err(MoveError::InvalidDestCoordinate)
         }
+        // TODO Dijkstra
         Ok(Direction::Up)
     }
 
@@ -116,7 +118,7 @@ impl NLACompass {
 
         match destination {
             Destination::Content(c, explore_new) => self.get_move_for_content(map, &c, *explore_new, &destination, &curr_pos),
-            Destination::TileType(t, explore_new) => self.get_move_for_tiletype(&t, *explore_new, &destination),
+            Destination::TileType(t, explore_new) => self.get_move_for_tiletype(map, &t, *explore_new, &destination, &curr_pos),
             Destination::Coordinate(c, explore_new) => self.get_move_for_coordinate(map, &c, *explore_new, &destination)
         }
     }

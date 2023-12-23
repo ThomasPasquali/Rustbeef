@@ -1,7 +1,10 @@
 use pathfinding::num_traits::Pow;
+use rand::{thread_rng, seq::SliceRandom};
 use robotics_lib::{world::tile::Tile, interface::Direction};
 
-use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate}};
+use crate::compass::{NLACompassParams, helpers::{in_bounds, Coordinate}, MoveError};
+
+use super::PossibleDirection;
 
 #[derive(Debug)]
 pub(crate) struct TileWithDirection<'a> {
@@ -24,6 +27,7 @@ fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> 
     }
 }
 
+/// Cost associated with moving from tile to another
 pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
     println!("Cost estimation: next_in {}, el_diff {}", cost_tile_entrance(next), cost_elevation_diff(curr, next, params));
     cost_tile_entrance(next) as f32      // Cost of entering the tile
@@ -91,7 +95,7 @@ pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option
 }
 
 // Returns number of undiscovered tiles around the tile at position `pos`
-pub(crate) fn get_undiscovered_tiles_count<'a> (pos: Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> usize {
+pub(crate) fn get_undiscovered_tiles_count (pos: &Coordinate, map: &Vec<Vec<Option<Tile>>>) -> usize {
     let mut discovered = 0;
     for row_off in -1..=1 {
         for col_off in -1..=1 {
@@ -109,3 +113,13 @@ pub(crate) fn get_undiscovered_tiles_count<'a> (pos: Coordinate, map: &'a Vec<Ve
     }
     discovered
 }
+
+pub(crate) fn inverse_weighted_choice (directions: &Vec<PossibleDirection>) -> Result<Direction, MoveError> {
+    let tot: f32 = directions.iter().map(|PossibleDirection{direction: _, cost, undiscovered: _}| cost).sum();
+
+    let mut rng = thread_rng();
+    match directions.choose_weighted(&mut rng, |el| tot/el.cost) {
+        Ok(choice) => Ok(choice.direction.clone()),
+        Err(_) => Err(MoveError::NoAvailableMove)
+    }
+  }
