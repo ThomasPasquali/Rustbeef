@@ -73,32 +73,11 @@ impl Runnable for MyRobot {
         let (surrounding, pos) = where_am_i(self, world);
         let map = robot_map(world);
 
-        // println!("Current position: {:#?}", pos);
-        // println!("Surroundings: {:#?}", surrounding);
-        // println!("Map: {:?}", map);
+        let direction = self.compass.get_move(&map.as_ref().unwrap(), (pos.0, pos.1));
 
-        let direction = self.compass.get_move(&map, &surrounding, pos);
-
-        // Go in random direction
-        // let mut rng = thread_rng();
-        // let d = rng.gen_range(0..=1);
-        // let direction = match d {
-        //     0 => Direction::Down,
-        //     _ => Direction::Right
-        // };
-
-        
-        // let _ = go(self, world, direction.clone().unwrap());
-    
-        match direction.clone() {
-            Some(d) => {
+        match direction {
+            Ok(ref d) => {
                 let res = go(self, world, d.clone());
-                // match d {
-                //     Direction::Up => Direction::Down,
-                //     Direction::Right => Direction::Right,
-                //     Direction::Down => Direction::Up,
-                //     Direction::Left => Direction::Left
-                // }
                 println!("Going: {:#?}", d);
                 if res.is_err() {
                     println!("Result: {:?}", res);
@@ -115,7 +94,7 @@ impl Runnable for MyRobot {
                 }
                 print!("\n\n\n\n");
             },
-            None => { println!("No direction from compass!"); }
+            Err(_) => { println!("No direction from compass!"); }
         }
         
         println!("row: {} col: {}", self.get_coordinate().get_row(), self.get_coordinate().get_col());
@@ -126,14 +105,14 @@ impl Runnable for MyRobot {
                 self.get_coordinate().get_row(),
                 self.get_coordinate().get_col(),
             )),
-            direction: match direction.clone() {
-                Some(d) => match d {
+            direction: match &direction {
+                Ok(d) => match d {
                     Direction::Up => UP_ARROW,
                     Direction::Right => RIGHT_ARROW,
                     Direction::Down => DOWN_ARROW,
                     Direction::Left => LEFT_ARROW
                 },
-                None => '-'
+                Err(_) => '-'
             }
         });
     }
@@ -144,7 +123,7 @@ pub fn initialize_runner(mut commands: bv::Commands) {
         robot: Robot::new(),
         compass: NLACompass::new()
     };
-    robot.compass.set_destination(Destination::COORDINATE(Coordinate::new(40, 40)));
+    robot.compass.set_destination(Destination::Coordinate((40, 40), true));
 
     let mut generator = endless_heights::WorldGenerator {};
     

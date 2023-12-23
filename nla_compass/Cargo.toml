@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 robotics_lib = { path = "../Robotic-Lib" }
-endless_heights = {path = "../endless_heights"}
 rand = { version = "0.8.5", features = [] }
 pathfinding = "4.4.0"
 env_logger = "0.10.1"

@@ -22,19 +22,19 @@ pub enum Destination {
 
 /// Errors returned by `getMove()`.
 pub enum MoveError {
-    // The destination has not been set
+    /// The destination has not been set
     NoDestination,
-    // There is no matching content in the explored world
+    /// There is no matching content in the explored world
     NoContent,
-    // There is no matching tiletype in the explored world
+    /// There is no matching tiletype in the explored world
     NoTileType,
-    // The current position does not point to an explored tile
+    /// The current position does not point to an explored tile
     InvalidCurrPosition,
-    // The destination coordinate is invalid
+    /// The destination coordinate is invalid
     InvalidDestCoordinate,
-    // The algorithm could not find any move to make
+    /// The algorithm could not find any move to make
     NoAvailableMove,
-    // The functionality has not been implemented yet :(
+    /// The functionality has not been implemented yet :(
     NotImplemented
 }
 
@@ -125,8 +125,8 @@ impl NLACompass {
     }
 
     /// Returns best direction according to set destination and parameters.
-    pub fn get_move(&self, map: &Vec<Vec<Option<Tile>>>, curr_pos: &RoboticCoord) -> Result<Direction, MoveError> {
-        let curr_pos = Coordinate::new(curr_pos.get_row(), curr_pos.get_col());
+    pub fn get_move(&self, map: &Vec<Vec<Option<Tile>>>, curr_pos: (usize, usize)) -> Result<Direction, MoveError> {
+        let curr_pos = Coordinate::new(curr_pos.0, curr_pos.1);
         let destination = self.destination.as_ref().ok_or(MoveError::NoDestination)?;
         
         if !in_bounds(map, &curr_pos) || map[curr_pos.row][curr_pos.col].is_none() {
