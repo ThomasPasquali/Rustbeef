@@ -4,6 +4,7 @@ use std::ops::Div;
 use core::hash::Hash;
 use self::helpers::get_cost;
 use self::helpers::Wrapper;
+use pathfinding::prelude::{build_path, dijkstra_all};
 
 fn successors(&node: &Wrapper) -> Vec<(Wrapper, usize)> {
     let mut successors = Vec::new();

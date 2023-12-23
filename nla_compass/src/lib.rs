@@ -2,4 +2,4 @@
 
 pub mod compass;
 mod probabilistic_model;
-// mod dijkstra;
+mod dijkstra;
