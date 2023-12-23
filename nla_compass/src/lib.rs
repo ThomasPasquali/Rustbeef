@@ -3,3 +3,4 @@
 pub mod compass;
 // pub mod dijkstra;
 pub mod probabilistic_model;
+mod dijkstra;
