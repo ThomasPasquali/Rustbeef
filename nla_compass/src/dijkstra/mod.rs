@@ -6,6 +6,7 @@ use self::helpers::get_cost;
 use pathfinding::prelude::{build_path, dijkstra_all};
 use robotics_lib::interface::Direction;
 use robotics_lib::world::tile::Tile;
+use crate::compass::MoveError;
 use crate::dijkstra::helpers::get_direction;
 
 pub(crate) struct Wrapper {
@@ -51,7 +52,7 @@ fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
     successors
 }
 
-pub(crate) fn get_move_for_coordinate(start: (usize, usize), destination: (usize, usize), map: &Vec<Vec<Option<Tile>>>) -> Direction {
+pub(crate) fn get_move_for_coordinate(start: (usize, usize), destination: (usize, usize), map: &Vec<Vec<Option<Tile>>>) -> Result<Direction, MoveError> {
     let start_wrapper = Wrapper {
         world: Rc::new(map.clone()),
         row: start.0,

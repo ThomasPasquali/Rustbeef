@@ -1,8 +1,9 @@
-// FIXME use crate::dijkstra::dijkstra_path;
+use crate::dijkstra;
 use robotics_lib::{interface::{Tools, Direction},
                    world::{tile::{Content, Tile, TileType}, coordinates::Coordinate as RoboticCoord}};
 
 use crate::{compass::helpers::in_bounds, probabilistic_model};
+use crate::dijkstra::get_move_for_coordinate;
 
 use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 
@@ -107,9 +108,8 @@ impl NLACompass {
             if explore_new {
                 probabilistic_model::get_move(map, curr_pos, &self.params)
             } else {
-                let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent);
-                // TODO Dijkstra
-                Err(MoveError::NotImplemented)
+                let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent)?;
+                self.get_move_for_coordinate(map, &coordinate, false, curr_pos)
             }
         }
     }
@@ -122,15 +122,13 @@ impl NLACompass {
             if explore_new {
                 probabilistic_model::get_move(map, curr_pos, &self.params)
             } else {
-                let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoTileType);
-                // TODO Dijkstra
-                Err(MoveError::NotImplemented)
+                let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoTileType)?;
+                self.get_move_for_coordinate(map, &coordinate, false, curr_pos)
             }
         }
     }
 
-    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &(usize, usize), explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
-        let c = Coordinate::new(c.0, c.1);
+    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
         if !in_bounds(map, &c) {
             return Err(MoveError::InvalidDestCoordinate)
         }
@@ -138,8 +136,7 @@ impl NLACompass {
             self.destination = None;
             Err(MoveError::AlreadyAtDestination)
         } else {
-            // TODO Dijkstra
-            Err(MoveError::NotImplemented)
+            dijkstra::get_move_for_coordinate((curr_pos.row, curr_pos.col), (c.row, c.col), map)
         }
     }
 
@@ -155,7 +152,7 @@ impl NLACompass {
         match destination {
             Destination::Content(c, explore_new) => self.get_move_for_content(map, &c, explore_new, &curr_pos),
             Destination::TileType(t, explore_new) => self.get_move_for_tiletype(map, &t, explore_new, &curr_pos),
-            Destination::Coordinate(c, explore_new) => self.get_move_for_coordinate(map, &c, explore_new, &curr_pos)
+            Destination::Coordinate(c, explore_new) => self.get_move_for_coordinate(map, &Coordinate::new(c.0, c.1), explore_new, &curr_pos)
         }
     }
 }
