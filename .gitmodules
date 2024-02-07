@@ -1,4 +1,0 @@
-[submodule "Robotic-Lib"]
-	path = Robotic-Lib
-	url = git@github.com:ThomasPasquali/Robotic-Lib.git
-	branch = master

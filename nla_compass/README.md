@@ -23,7 +23,6 @@ impl Runnable for MyRobot {
             &robot_map(world).unwrap(), self.get_coordinate()
         );
         // Your robot logic
-        ...
     }
 }
 
