@@ -5,7 +5,7 @@ use crate::{compass::{MoveError, NLACompassParams, helpers::{Coordinate, TileWit
 mod helpers;
 
 #[derive(Debug)]
-struct PossibleDirection {
+pub struct PossibleDirection {
     direction: Direction,
     cost: f32,
     undiscovered: usize
