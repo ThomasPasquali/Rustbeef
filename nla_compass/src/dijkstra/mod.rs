@@ -10,6 +10,7 @@ use crate::compass::MoveError;
 use crate::dijkstra::helpers::get_direction;
 use std::cmp::max;
 
+#[derive(Debug)]
 pub(crate) struct Wrapper {
     pub(crate) world: Rc<Vec<Vec<Option<Tile>>>>,
     pub(crate) row: usize,
@@ -38,11 +39,19 @@ impl Clone for Wrapper {
 }
 
 fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
+    let mut row_start = node.row;
+    let mut col_start = node.col;
+    if row_start > 0 {
+        row_start -= 1;
+    }
+    if col_start > 0 {
+        col_start -= 1;
+    }
     let mut successors = Vec::new();
     // Iterate over 3x3 adjacent tiles
 
-    for row in [max(node.row-1, 0), node.row+1] {
-        for col in [max(node.col-1, 0), node.col+1] {
+    for row in row_start..node.row+1 {
+        for col in col_start..node.col+1 {
             if let Some(_) = node.world.as_ref()[row][col] {
                 successors.push((Wrapper {
                     world: node.world.clone(), row, col
