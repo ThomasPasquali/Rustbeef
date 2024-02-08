@@ -10,7 +10,7 @@ use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 pub(crate) mod helpers;
 
 /// Defines the destination of the compass.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Destination {
     /// Content (content, explore_new). Quantity field is ignored.
     Content(Content, bool),

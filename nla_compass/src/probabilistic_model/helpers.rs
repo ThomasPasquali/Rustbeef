@@ -22,10 +22,8 @@ fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> 
 
 /// Cost associated with moving from tile to another
 pub(crate) fn move_cost_estimation (curr: &Tile, next: &Tile, params: &NLACompassParams) -> f32 {
-    cost_tile_entrance(next) as f32      // Cost of entering the tile
-    + cost_elevation_diff(curr, next, params)    // Cost of elevation difference (both positive and negative)
-    // TODO check if can add   next_type_cost
-    // TODO cost_next_next
+    cost_tile_entrance(next) as f32         // Cost of entering the tile
+    + cost_elevation_diff(curr, next, params)     // Cost of elevation difference (both positive and negative)
 }
 
 fn get_adjacent_tile<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>, direction: &Direction) -> Option<TileWithCordinates<'a>> {
@@ -80,9 +78,9 @@ pub(crate) fn ordered_directions () -> Vec<Direction> {
 }
 
 /// Returns left, right, top and bottom adjacent tiles
-pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> Vec<Option<TileWithCordinates<'a>>> {
+pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option<Tile>>>) -> Vec<(Direction, Option<TileWithCordinates<'a>>)> {
     ordered_directions().iter().map(|dir| {
-        get_adjacent_tile(curr, &map, dir)     
+        (dir.to_owned(), get_adjacent_tile(curr, &map, dir))  
     }).collect()
 }
 
