@@ -47,15 +47,18 @@ pub struct NLACompassParams {
     pub cost_neg_el_diff_pow: f32,
     /// Cost assigned to the number of undiscovered tiles for the next move. Defaults to 1. CANNOT be 0.
     pub cost_disc_tiles_proportion: usize,
-    /// The base to raise to the power of the distance from the nearest undiscovered tile
-    pub dist_from_undiscovered: f32
+    /// The power to raise the distance from the nearest undiscovered tile
+    pub dist_from_undiscovered_pow: f32,
+    /// The power to raise the cost when triyng to reach a coordinate but going further to it
+    pub getting_further_to_coords_pow: f32
 }
 impl Default for NLACompassParams {
     fn default() -> Self {
         NLACompassParams {
-            cost_neg_el_diff_pow: 3.0 / 2.0,  // 1.5
-            cost_disc_tiles_proportion: 1,    // CANNNOT be 0
-            dist_from_undiscovered: 5_f32 // Should be greater than 1
+            cost_neg_el_diff_pow: 3.0 / 2.0,        // 1.5
+            cost_disc_tiles_proportion: 1,          // CANNNOT be 0
+            dist_from_undiscovered_pow: 3_f32,      // Should be greater than 1
+            getting_further_to_coords_pow: 6_f32    // Should be greater than 1
         }
     }
 }
@@ -64,7 +67,8 @@ impl Default for NLACompassParams {
 /// See the `Destination` enum for information on how to configure the destination.
 pub struct NLACompass {
     params: NLACompassParams,
-    destination: Option<Destination>
+    destination: Option<Destination>,
+    last_move: Option<Direction>
 }
 
 impl Tools for NLACompass { }
@@ -72,7 +76,7 @@ impl Tools for NLACompass { }
 impl NLACompass {
     /// Initilizes a new compass with the default parameters.
     pub fn new () -> Self {
-        NLACompass { destination: None, params: NLACompassParams::default() }
+        NLACompass { destination: None, params: NLACompassParams::default(), last_move: None }
     }
 
     /// Sets advanced configuration parameters.
@@ -107,7 +111,7 @@ impl NLACompass {
             Err(MoveError::AlreadyAtDestination)
         } else {
             if explore_new {
-                probabilistic_model::get_move(map, curr_pos, &self.params)
+                probabilistic_model::get_move(map, curr_pos, None, &self.params, &self.last_move)
             } else {
                 let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent)?;
                 self.get_move_for_coordinate(map, &coordinate, curr_pos)
@@ -121,7 +125,7 @@ impl NLACompass {
             Err(MoveError::AlreadyAtDestination)
         } else {
             if explore_new {
-                probabilistic_model::get_move(map, curr_pos, &self.params)
+                probabilistic_model::get_move(map, curr_pos, None, &self.params, &self.last_move)
             } else {
                 let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoTileType)?;
                 self.get_move_for_coordinate(map, &coordinate, curr_pos)
@@ -136,8 +140,13 @@ impl NLACompass {
         if curr_pos.row == c.row && curr_pos.col == c.col {
             self.destination = None;
             Err(MoveError::AlreadyAtDestination)
+        } else if map[c.row][c.col].is_some() { // May already know the destination
+            match dijkstra::get_move_for_coordinate((curr_pos.row, curr_pos.col), (c.row, c.col), map) {
+                Ok(dir) => Ok(dir),
+                Err(..) => probabilistic_model::get_move(map, curr_pos, Some(c), &self.get_params(), &self.last_move)
+            }
         } else {
-            dijkstra::get_move_for_coordinate((curr_pos.row, curr_pos.col), (c.row, c.col), map)
+            probabilistic_model::get_move(map, curr_pos, Some(c), &self.get_params(), &self.last_move)
         }
     }
 
@@ -150,10 +159,12 @@ impl NLACompass {
             return Err(MoveError::InvalidCurrPosition)
         }
 
-        match destination {
+        let res = match destination {
             Destination::Content(c, explore_new) => self.get_move_for_content(map, &c, explore_new, &curr_pos),
             Destination::TileType(t, explore_new) => self.get_move_for_tiletype(map, &t, explore_new, &curr_pos),
             Destination::Coordinate(c) => self.get_move_for_coordinate(map, &Coordinate::new(c.0, c.1), &curr_pos)
-        }
+        };
+        self.last_move = if let Ok(d) = res.as_ref() { Some(d.clone()) } else { None };
+        res
     }
 }

@@ -1,6 +1,8 @@
 use robotics_lib::{world::tile::Tile, interface::Direction};
 
-use crate::{compass::{MoveError, NLACompassParams, helpers::{Coordinate, TileWithCordinates}}, probabilistic_model::helpers::{get_adjacent_tiles, inverse_weighted_choice}};
+use crate::{compass::{helpers::{Coordinate, TileWithCordinates}, MoveError, NLACompassParams}, probabilistic_model::helpers::{get_adjacent_tiles, get_opposite_direction, inverse_weighted_choice}};
+
+use self::helpers::getting_closer_to_destination_coords;
 
 mod helpers;
 
@@ -12,13 +14,18 @@ pub(crate) struct PossibleDirection {
     tiles_until_undiscovered: usize
 }
 
-pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, params: &NLACompassParams) -> Result<Direction, MoveError> {
+pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, destination_coords: Option<&Coordinate>, params: &NLACompassParams, last_move: &Option<Direction>) -> Result<Direction, MoveError> {
 
     let adj_tiles = get_adjacent_tiles(curr_pos, robot_map);
     // println!("Adjacent tiles: {:#?}", &adj_tiles);
 
     // Vector containing cost and number of undiscovered tiles that can be reached
     let mut possible_directions: Vec<PossibleDirection> = adj_tiles.iter().filter_map(|next| {
+        if let Some(lm) = last_move {
+            if next.0 == get_opposite_direction(lm) {
+                return None;
+            }
+        }
         get_possible_direction(robot_map, curr_pos, params, next)
     }).collect();
 
@@ -34,8 +41,19 @@ pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate
         // Cost inversly proportional to number of undiscovered tiles: more undiscovered -> smaller cost
         let cost_undiscovered = cost_tot / (c.undiscovered + params.cost_disc_tiles_proportion) as f32;
         c.cost = (c.cost + cost_undiscovered).powi(3);
+
         // Add cost given by how far is from undiscovered tiles
-        c.cost += params.dist_from_undiscovered.powi(c.tiles_until_undiscovered as i32);        
+        c.cost += (c.tiles_until_undiscovered as f32).powf(params.dist_from_undiscovered_pow);
+
+        // If going to coordinates consider if getting closer
+        if let Some(dest) = destination_coords {
+            if !getting_closer_to_destination_coords(curr_pos, dest, &c.direction) {
+                // println!("Applied getting further multiplier!");
+                c.cost = c.cost.powf(params.getting_further_to_coords_pow);
+            }
+        }
+
+        // println!("Costs: {:?} {:?}", c.direction, c.cost);
     }
 
     inverse_weighted_choice(&possible_directions)

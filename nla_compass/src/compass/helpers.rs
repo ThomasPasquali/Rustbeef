@@ -1,4 +1,4 @@
-use robotics_lib::world::tile::{Tile, Content, TileType};
+use robotics_lib::world::tile::{Content, Tile, TileType};
 
 #[derive(Debug)]
 pub(crate) struct TileWithCordinates<'a> {

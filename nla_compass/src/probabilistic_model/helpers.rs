@@ -98,9 +98,13 @@ pub(crate) fn get_tiles_count_until_undiscovered (pos: &Coordinate, map: &Vec<Ve
         }
         let r = pos.row.checked_add_signed(row_off);
         let c = pos.col.checked_add_signed(col_off);
-        if r.is_some() && c.is_some() && map[r.unwrap()][c.unwrap()].is_some() {
+        let is_border = r.is_none() || c.is_none() || !in_bounds(map, &pos);
+        if !is_border && map[r.unwrap()][c.unwrap()].is_some() {
             count += 1;
         } else {
+            if is_border {
+                count += 100;
+            }
             break;
         }
     }
@@ -125,11 +129,30 @@ pub(crate) fn get_undiscovered_tiles_count (pos: &Coordinate, map: &Vec<Vec<Opti
 }
 
 pub(crate) fn inverse_weighted_choice (directions: &Vec<PossibleDirection>) -> Result<Direction, MoveError> {
-    let tot: f32 = directions.iter().map(|poss_dir| poss_dir.cost).sum();
+    // let tot: f32 = directions.iter().map(|poss_dir| 1_f32 / poss_dir.cost).sum();
+    // println!("Final choices probabilities: {:?}", directions.iter().map(|el| ((1_f32 / el.cost) / tot * 100_f32) as u32).collect::<Vec<u32>>());
 
     let mut rng = thread_rng();
-    match directions.choose_weighted(&mut rng, |el| tot / el.cost) {
+    match directions.choose_weighted(&mut rng, |el| 1_f32 / el.cost) {
         Ok(choice) => Ok(choice.direction.clone()),
         Err(_) => Err(MoveError::NoAvailableMove)
     }
-  }
+}
+
+pub(crate) fn getting_closer_to_destination_coords(curr_pos: &Coordinate, destination_coords: &Coordinate, direction: &Direction) -> bool {
+    match direction {
+        Direction::Up => curr_pos.row > destination_coords.row,
+        Direction::Down => curr_pos.row < destination_coords.row,
+        Direction::Left => curr_pos.col > destination_coords.row,
+        Direction::Right => curr_pos.col < destination_coords.row
+    }
+}
+
+pub(crate) fn get_opposite_direction(direction: &Direction) -> Direction {
+    match direction {
+        Direction::Down => Direction::Up,
+        Direction::Up => Direction::Down,
+        Direction::Right => Direction::Left,
+        Direction::Left => Direction::Right,
+    }
+}
