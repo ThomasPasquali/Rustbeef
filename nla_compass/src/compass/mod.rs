@@ -16,8 +16,8 @@ pub enum Destination {
     Content(Content, bool),
     /// Tile type (tiletype, explore_new)
     TileType(TileType, bool),
-    /// Coordinate (coordinate, explore_new)
-    Coordinate((usize, usize), bool),
+    /// Coordinate (coordinate)
+    Coordinate((usize, usize)),
 }
 
 /// Errors returned by `getMove()`.
@@ -107,7 +107,7 @@ impl NLACompass {
                 probabilistic_model::get_move(map, curr_pos, &self.params)
             } else {
                 let coordinate = get_closest_content(map, c, curr_pos).ok_or(MoveError::NoContent)?;
-                self.get_move_for_coordinate(map, &coordinate, false, curr_pos)
+                self.get_move_for_coordinate(map, &coordinate, curr_pos)
             }
         }
     }
@@ -121,12 +121,12 @@ impl NLACompass {
                 probabilistic_model::get_move(map, curr_pos, &self.params)
             } else {
                 let coordinate = get_closest_tiletype(map, t, curr_pos).ok_or(MoveError::NoTileType)?;
-                self.get_move_for_coordinate(map, &coordinate, false, curr_pos)
+                self.get_move_for_coordinate(map, &coordinate, curr_pos)
             }
         }
     }
 
-    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, _explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
+    fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
         if !in_bounds(map, &c) {
             return Err(MoveError::InvalidDestCoordinate)
         }
@@ -150,7 +150,7 @@ impl NLACompass {
         match destination {
             Destination::Content(c, explore_new) => self.get_move_for_content(map, &c, explore_new, &curr_pos),
             Destination::TileType(t, explore_new) => self.get_move_for_tiletype(map, &t, explore_new, &curr_pos),
-            Destination::Coordinate(c, explore_new) => self.get_move_for_coordinate(map, &Coordinate::new(c.0, c.1), explore_new, &curr_pos)
+            Destination::Coordinate(c) => self.get_move_for_coordinate(map, &Coordinate::new(c.0, c.1), &curr_pos)
         }
     }
 }

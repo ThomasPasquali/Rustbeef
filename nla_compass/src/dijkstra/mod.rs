@@ -8,7 +8,6 @@ use robotics_lib::interface::Direction;
 use robotics_lib::world::tile::Tile;
 use crate::compass::MoveError;
 use crate::dijkstra::helpers::get_direction;
-use std::cmp::max;
 
 #[derive(Debug)]
 pub(crate) struct Wrapper {
