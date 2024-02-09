@@ -38,28 +38,41 @@ impl Clone for Wrapper {
 }
 
 fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
+    //println!("\nHere at the start");
     let mut row_start = node.row;
     let mut col_start = node.col;
+    let mut row_end = node.row + 1;
+    let mut col_end = node.col + 1;
     if row_start > 0 {
         row_start -= 1;
     }
     if col_start > 0 {
         col_start -= 1;
     }
-    let mut successors = Vec::new();
+    if row_end < (node.world.len()) {
+        row_end += 1;
+    }
+    if col_end < (node.world.len()) {
+        col_end += 1;
+    }
+    let mut result = Vec::new();
     // Iterate over 3x3 adjacent tiles
 
-    for row in row_start..node.row+1 {
-        for col in col_start..node.col+1 {
+    for row in row_start..row_end {
+        for col in col_start..col_end {
+            //println!("{}{}: range {}{} - {}{}", row, col, row_start, col_start, row_end, col_end);
             if let Some(_) = node.world.as_ref()[row][col] {
-                successors.push((Wrapper {
+                //println!("{}{}, is some", row, col);
+                result.push((Wrapper {
                     world: node.world.clone(), row, col
                 }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
-                            &node.world.as_ref()[row][col].as_ref().unwrap())))
+                            &node.world.as_ref()[row][col].as_ref().unwrap())));
+                //println!("pushed\n");
             }
         };
     }
-    successors
+    //println!("loop ended");
+    return result;
 }
 
 pub(crate) fn get_move_for_coordinate(start: (usize, usize), destination: (usize, usize), map: &Vec<Vec<Option<Tile>>>) -> Result<Direction, MoveError> {
