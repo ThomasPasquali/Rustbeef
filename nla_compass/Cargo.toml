@@ -1,6 +1,6 @@
 [package]
 name = "rustbeef_nlacompass"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 description = "A compass that suggests directions to reach a set destination."
 authors = ["Thomas Pasquali", "Salvatore Andaloro", "Claudio Foroncelli", "Florian Kandra"]
