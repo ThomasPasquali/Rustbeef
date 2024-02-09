@@ -16,7 +16,7 @@ fn cost_elevation_diff (curr: &Tile, next: &Tile, params: &NLACompassParams) -> 
     if uphill {
         diff.pow(2) as f32
     } else {
-        (diff as f32).pow(params.cost_neg_el_diff_pow)
+        (diff.abs() as f32).pow(params.cost_neg_el_diff_pow)
     }
 }
 
@@ -84,31 +84,51 @@ pub(crate) fn get_adjacent_tiles<'a> (curr: &Coordinate, map: &'a Vec<Vec<Option
     }).collect()
 }
 
+// Returns number of discovered tiles until an undiscovered one. From `pos` going in `direction`.
+pub(crate) fn get_tiles_count_until_undiscovered (pos: &Coordinate, map: &Vec<Vec<Option<Tile>>>, direction: &Direction) -> usize {
+    let mut count = 0;
+    let mut row_off = 0;
+    let mut col_off = 0;
+    loop {
+        match direction {
+            Direction::Up => { row_off -= 1; },
+            Direction::Down => { row_off += 1; },
+            Direction::Left => { col_off -= 1; },
+            Direction::Right => { col_off += 1; }
+        }
+        let r = pos.row.checked_add_signed(row_off);
+        let c = pos.col.checked_add_signed(col_off);
+        if r.is_some() && c.is_some() && map[r.unwrap()][c.unwrap()].is_some() {
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    count
+}
+
 // Returns number of undiscovered tiles around the tile at position `pos`
 pub(crate) fn get_undiscovered_tiles_count (pos: &Coordinate, map: &Vec<Vec<Option<Tile>>>) -> usize {
     let mut discovered = 0;
     for row_off in -1..=1 {
         for col_off in -1..=1 {
-            let Some(row) = pos.row.checked_add_signed(row_off) else {
-                break;
+            if let Some(row) = pos.row.checked_add_signed(row_off) {
+                if let Some(col) = pos.row.checked_add_signed(col_off) {
+                    if in_bounds(map, &Coordinate::new(row, col)) && map[row][col].is_none() { 
+                        discovered += 1;
+                    }
+                };
             };
-            let Some(col) = pos.row.checked_add_signed(col_off) else {
-                break;
-            };
-            if in_bounds(map, &Coordinate::new(row, col))
-                && map[row][col].is_none() { 
-                discovered += 1;
-            }
         }
     }
     discovered
 }
 
 pub(crate) fn inverse_weighted_choice (directions: &Vec<PossibleDirection>) -> Result<Direction, MoveError> {
-    let tot: f32 = directions.iter().map(|PossibleDirection{direction: _, cost, undiscovered: _}| cost).sum();
+    let tot: f32 = directions.iter().map(|poss_dir| poss_dir.cost).sum();
 
     let mut rng = thread_rng();
-    match directions.choose_weighted(&mut rng, |el| tot/el.cost) {
+    match directions.choose_weighted(&mut rng, |el| tot / el.cost) {
         Ok(choice) => Ok(choice.direction.clone()),
         Err(_) => Err(MoveError::NoAvailableMove)
     }

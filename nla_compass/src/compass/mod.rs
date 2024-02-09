@@ -46,13 +46,16 @@ pub struct NLACompassParams {
     /// Cost assigned for going downhill. Used so that the robot avoids losing the elevation potential it gained. Defaults to 1.5.
     pub cost_neg_el_diff_pow: f32,
     /// Cost assigned to the number of undiscovered tiles for the next move. Defaults to 1. CANNOT be 0.
-    pub cost_disc_tiles_proportion: usize
+    pub cost_disc_tiles_proportion: usize,
+    /// The base to raise to the power of the distance from the nearest undiscovered tile
+    pub dist_from_undiscovered: f32
 }
 impl Default for NLACompassParams {
     fn default() -> Self {
         NLACompassParams {
-            cost_neg_el_diff_pow: 3.0 / 2.0, // 1.5
-            cost_disc_tiles_proportion: 1    // CANNNOT be 0
+            cost_neg_el_diff_pow: 3.0 / 2.0,  // 1.5
+            cost_disc_tiles_proportion: 1,    // CANNNOT be 0
+            dist_from_undiscovered: 5_f32 // Should be greater than 1
         }
     }
 }

@@ -5,33 +5,37 @@ use crate::{compass::{MoveError, NLACompassParams, helpers::{Coordinate, TileWit
 mod helpers;
 
 #[derive(Debug)]
-pub struct PossibleDirection {
+pub(crate) struct PossibleDirection {
     direction: Direction,
     cost: f32,
-    undiscovered: usize
+    undiscovered: usize,
+    tiles_until_undiscovered: usize
 }
 
 pub(crate) fn get_move(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordinate, params: &NLACompassParams) -> Result<Direction, MoveError> {
 
     let adj_tiles = get_adjacent_tiles(curr_pos, robot_map);
-    println!("Adjacent tiles: {:#?}", &adj_tiles);
+    // println!("Adjacent tiles: {:#?}", &adj_tiles);
 
     // Vector containing cost and number of undiscovered tiles that can be reached
     let mut possible_directions: Vec<PossibleDirection> = adj_tiles.iter().filter_map(|next| {
         get_possible_direction(robot_map, curr_pos, params, next)
     }).collect();
 
-    println!("Costs + discover {:#?}", &possible_directions);
+    // println!("Costs + discover {:#?}", &possible_directions);
 
     let cost_tot: f32 = possible_directions.iter()
-        .map(|PossibleDirection{direction: _, cost, undiscovered: _}| cost)
+        .map(|poss_dir| poss_dir.cost)
         .sum();
 
+    // Gather all costs estimation into `cost`
     for c in possible_directions.iter_mut() {
         // Add cost given by number of reachable undiscovered tiles
         // Cost inversly proportional to number of undiscovered tiles: more undiscovered -> smaller cost
         let cost_undiscovered = cost_tot / (c.undiscovered + params.cost_disc_tiles_proportion) as f32;
         c.cost = (c.cost + cost_undiscovered).powi(3);
+        // Add cost given by how far is from undiscovered tiles
+        c.cost += params.dist_from_undiscovered.powi(c.tiles_until_undiscovered as i32);        
     }
 
     inverse_weighted_choice(&possible_directions)
@@ -44,25 +48,16 @@ fn get_possible_direction(robot_map: &Vec<Vec<Option<Tile>>>, curr_pos: &Coordin
     let tile = tile_with_dir.tile;
     let tile_pos = &tile_with_dir.pos;
     let curr = robot_map[curr_pos.row][curr_pos.col].as_ref()?;
+    let tiles_until_undiscovered = helpers::get_tiles_count_until_undiscovered(curr_pos, robot_map, &direction);
 
     if !tile.tile_type.properties().walk() {
-        return None;
-    }
-
-    let undiscovered = helpers::get_undiscovered_tiles_count(tile_pos, robot_map);
-
-    if undiscovered > 0 {
-        return Some(PossibleDirection {
+        None
+    } else {
+        Some(PossibleDirection {
             direction,
             cost: helpers::move_cost_estimation(curr, tile, params),
-            undiscovered
-        });
-    }else{
-        // If all adjacent tiles have been already discovered, assign a high cost for this direction
-        return Some(PossibleDirection {
-            direction,
-            cost: 100.0,
-            undiscovered: 0
-        });
-    }
+            undiscovered: helpers::get_undiscovered_tiles_count(tile_pos, robot_map),
+            tiles_until_undiscovered
+        })
+    }    
 }
