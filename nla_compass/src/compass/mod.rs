@@ -58,7 +58,7 @@ impl Default for NLACompassParams {
             cost_neg_el_diff_pow: 3.0 / 2.0,        // 1.5
             cost_disc_tiles_proportion: 1,          // CANNNOT be 0
             dist_from_undiscovered_pow: 3_f32,      // Should be greater than 1
-            getting_further_to_coords_pow: 6_f32    // Should be greater than 1
+            getting_further_to_coords_pow: 5_f32    // Should be greater than 1
         }
     }
 }

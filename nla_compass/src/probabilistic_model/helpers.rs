@@ -99,7 +99,9 @@ pub(crate) fn get_tiles_count_until_undiscovered (pos: &Coordinate, map: &Vec<Ve
         let r = pos.row.checked_add_signed(row_off);
         let c = pos.col.checked_add_signed(col_off);
         let is_border = r.is_none() || c.is_none() || !in_bounds(map, &pos);
-        if !is_border && map[r.unwrap()][c.unwrap()].is_some() {
+        if !is_border 
+            && in_bounds(map, &Coordinate { row: r.unwrap(), col: c.unwrap() })
+            && map[r.unwrap()][c.unwrap()].is_some() {
             count += 1;
         } else {
             if is_border {
