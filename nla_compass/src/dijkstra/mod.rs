@@ -58,7 +58,7 @@ fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
     let mut result: Vec<(Wrapper, usize)> = Vec::new();
 
     // continue only if start_tile is some
-    if &node.world.as_ref()[node.row][node.col].as_ref().is_none() {
+    if node.world.as_ref()[node.row][node.col].as_ref().is_none() {
         return result;
     }
 
