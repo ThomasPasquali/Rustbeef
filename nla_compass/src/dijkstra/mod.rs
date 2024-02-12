@@ -55,7 +55,13 @@ fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
     if col_end < (node.world.len()) {
         col_end += 1;
     }
-    let mut result = Vec::new();
+    let mut result: Vec<(Wrapper, usize)> = Vec::new();
+
+    // continue only if start_tile is some
+    if &node.world.as_ref()[node.row][node.col].as_ref().is_none() {
+        return result;
+    }
+
     // Iterate over 3x3 adjacent tiles
 
     for row in row_start..row_end {
