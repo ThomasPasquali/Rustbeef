@@ -106,7 +106,7 @@ impl NLACompass {
 
     fn get_move_for_content (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Content, explore_new: bool, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
         // Check if we have already reached the destination
-        if map[curr_pos.row][curr_pos.col].as_ref().ok_or(MoveError::InvalidCurrPosition)?.content.to_default() == *c.to_default() {
+        if map[curr_pos.row][curr_pos.col].as_ref().ok_or(MoveError::InvalidCurrPosition)?.content.to_default() == c.clone().to_default() {
             self.destination = None;
             Err(MoveError::AlreadyAtDestination)
         } else {
