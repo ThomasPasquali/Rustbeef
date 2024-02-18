@@ -3,7 +3,7 @@ use robotics_lib::{interface::{Tools, Direction},
                    world::tile::{Content, Tile, TileType}};
 
 use crate::{compass::helpers::in_bounds, probabilistic_model};
-
+use crate::dijkstra::Wrapper;
 use self::helpers::{get_closest_content, Coordinate, get_closest_tiletype};
 
 // Helpers for compass tool
@@ -68,7 +68,9 @@ impl Default for NLACompassParams {
 pub struct NLACompass {
     params: NLACompassParams,
     destination: Option<Destination>,
-    last_move: Option<Direction>
+    last_move: Option<Direction>,
+    dijkstra_path: Option<Vec<Wrapper>>,
+    last_coordinate: Option<Coordinate>
 }
 
 impl Tools for NLACompass { }
@@ -76,7 +78,13 @@ impl Tools for NLACompass { }
 impl NLACompass {
     /// Initilizes a new compass with the default parameters.
     pub fn new () -> Self {
-        NLACompass { destination: None, params: NLACompassParams::default(), last_move: None }
+        NLACompass {
+            destination: None,
+            params: NLACompassParams::default(),
+            last_move: None,
+            dijkstra_path: None,
+            last_coordinate: None
+        }
     }
 
     /// Sets advanced configuration parameters.
@@ -134,6 +142,14 @@ impl NLACompass {
     }
 
     fn get_move_for_coordinate (&mut self, map: &Vec<Vec<Option<Tile>>>, c: &Coordinate, curr_pos: &Coordinate) -> Result<Direction, MoveError> {
+
+        let mut coordinate_reset = false;
+
+        if self.last_coordinate.as_ref().is_some_and(|coordinate| (coordinate.row, coordinate.col) != (c.row, c.col)) || self.last_coordinate.is_none() {
+            self.last_coordinate = Some(Coordinate::new(c.row, c.col));
+            coordinate_reset = true;
+        }
+
         if !in_bounds(map, &c) {
             return Err(MoveError::InvalidDestCoordinate)
         }
@@ -141,10 +157,19 @@ impl NLACompass {
             self.destination = None;
             Err(MoveError::AlreadyAtDestination)
         } else if map[c.row][c.col].is_some() { // May already know the destination
-            match dijkstra::get_move_for_coordinate((curr_pos.row, curr_pos.col), (c.row, c.col), map) {
-                Ok(dir) => Ok(dir),
+
+            if coordinate_reset {
+                self.dijkstra_path = Some(dijkstra::get_path_vector((curr_pos.row, curr_pos.col), (c.row, c.col), map));
+            }
+            match dijkstra::helpers::get_direction(&self.dijkstra_path.clone().unwrap()) {
+                Ok(dir) => {
+                    let _ = self.dijkstra_path.as_mut().unwrap().remove(0);
+                    return Ok(dir);
+                },
                 Err(..) => probabilistic_model::get_move(map, curr_pos, Some(c), &self.get_params(), &self.last_move)
             }
+
+
         } else {
             probabilistic_model::get_move(map, curr_pos, Some(c), &self.get_params(), &self.last_move)
         }

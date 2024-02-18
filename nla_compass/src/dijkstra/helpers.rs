@@ -25,5 +25,4 @@ pub(crate) fn get_direction(v: &Vec<Wrapper>) -> Result<Direction, MoveError> {
             if v[1].row > v[0].row { Ok(Direction::Down) } else { Ok(Direction::Up) }
         }
     }
-
 }
