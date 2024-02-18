@@ -82,7 +82,7 @@ impl NLACompass {
             destination: None,
             params: NLACompassParams::default(),
             last_move: None,
-            dijkstra_path: None,
+            dijkstra_path: Some(Vec::new()),
             last_coordinate: None
         }
     }
