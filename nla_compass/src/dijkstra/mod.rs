@@ -116,7 +116,6 @@ pub(crate) fn get_path_vector(start: (usize, usize), destination: (usize, usize)
     };
     let reachables_from_start = dijkstra_all(&start_wrapper, successors);
     let path_start_to_dest = build_path(&destination_wrapper, &reachables_from_start);
-    println!("{:?}", path_start_to_dest);
     path_start_to_dest
     //get_direction(&path_start_to_dest)
 }
