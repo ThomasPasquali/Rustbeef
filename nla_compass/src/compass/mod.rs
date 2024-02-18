@@ -158,9 +158,10 @@ impl NLACompass {
             Err(MoveError::AlreadyAtDestination)
         } else if map[c.row][c.col].is_some() { // May already know the destination
 
-            if coordinate_reset {
+            if coordinate_reset || self.dijkstra_path.clone().unwrap().len() == 0 {
                 self.dijkstra_path = Some(dijkstra::get_path_vector((curr_pos.row, curr_pos.col), (c.row, c.col), map));
             }
+            println!("{:?}", &self.dijkstra_path.clone().unwrap());
             match dijkstra::helpers::get_direction(&self.dijkstra_path.clone().unwrap()) {
                 Ok(dir) => {
                     let _ = self.dijkstra_path.as_mut().unwrap().remove(0);
