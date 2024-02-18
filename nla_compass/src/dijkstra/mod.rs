@@ -1,14 +1,11 @@
 pub mod helpers;
 use std::hash::Hasher;
 use core::hash::Hash;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 use self::helpers::get_cost;
 use pathfinding::prelude::{build_path, dijkstra_all};
-use robotics_lib::interface::Direction;
 use robotics_lib::world::tile::Tile;
-use crate::compass::MoveError;
-use crate::dijkstra::helpers::get_direction;
 
 pub(crate) struct Wrapper {
     pub(crate) world: Rc<Vec<Vec<Option<Tile>>>>,
