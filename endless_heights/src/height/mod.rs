@@ -7,12 +7,15 @@ use rand::rngs::StdRng;
 use rand::Rng;
 use rand_distr::{Distribution, Uniform};
 
+
+/// Struct to link a position to a certain elevation.
 #[allow(dead_code)]
 struct ElevationTile {
     pos: Position,
     elevation: usize,
 }
 
+/// A grid of ElevationTiles.
 pub struct HeightMap(Vec<Vec<ElevationTile>>);
 #[macro_export]
 macro_rules! height_map {
@@ -44,6 +47,8 @@ impl Display for HeightMap {
         write!(f, "{}", out)
     }
 }
+
+/// A gaussian function with given parameters.
 struct Gaussian {
     angle: f32,
     sigma_y: f32,
@@ -73,6 +78,7 @@ impl Gaussian {
             scale,
         }
     }
+    /// Returns the value for coordinate x, y for the gaussian.
     fn get_value_at(&self, x: f32, y: f32) -> f32 {
         let a = f32::powf(f32::cos(self.angle), 2.0) / (2.0 * f32::powf(self.sigma_x, 2.0))
             + f32::powf(f32::sin(self.angle), 2.0) / (2.0 * f32::powf(self.sigma_y, 2.0));
@@ -101,6 +107,7 @@ impl Default for Gaussian {
     }
 }
 
+/// Creates an array of different gaussians randomly sampled given the parameters.
 fn sample_gaussians(
     gaussians: &mut Vec<Gaussian>,
     bumpiness: usize,
@@ -137,7 +144,7 @@ fn sample_gaussians(
 }
 
 /// Creates a square map of elevation tiles.
-/// 
+/// First an array of gaussians is drawn from sample_gaussians(). Given the set of different functions, each position is given an elevation based on the highest value amongst gaussians, plus a fraction of the other gaussians given 'interpolation'.
 #[allow(unused_assignments)]
 pub fn create_height_map(
     size: usize,
@@ -154,14 +161,9 @@ pub fn create_height_map(
     let mut elevations = Vec::<usize>::new();
     for i in 0..size {
         for j in 0..size {
-            // let mut elevation: f32 = 0.0;
-            // for gaussian in &gaussians{
-            //     elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
-            // }
             let mut elevation: usize = 0;
             let mut gaussian_values = Vec::<usize>::new();
             for gaussian in &gaussians {
-                // elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
                 gaussian_values.push(gaussian.get_value_at(i as f32, j as f32) as usize);
             }
             // Taking max value for each position
@@ -196,30 +198,4 @@ pub fn bump_world(world: &mut World, height_map: HeightMap) {
             world[i][j].elevation = height_map.0[i][j].elevation;
         }
     }
-}
-// pub fn bump_world(world: &mut World, bumpiness: u32, scale: f32, interpolation: f32, stretch: f32, wideness: f32){
-//     let mut gaussians = Vec::<Gaussian>::new();
-//     sample_gaussians(&mut gaussians, bumpiness, scale, world.dimension, stretch, wideness);
-//     for i in 0..world.dimension{
-//         for j in 0..world.dimension{
-//             let mut elevation: usize = 0;
-//             let mut gaussian_values = Vec::<usize>::new();
-//             for gaussian in &gaussians{
-//                 // elevation = f32::max(elevation, gaussian.get_value_at(i as f32, j as f32));
-//                 gaussian_values.push(gaussian.get_value_at(i as f32, j as f32) as usize);
-//             }
-//             gaussian_values.sort();
-//             elevation = gaussian_values[gaussian_values.len() - 1];
-//             for v in 0..gaussian_values.len() - 1{
-//                 elevation += (interpolation * v as f32) as usize;
-//             }
-//             world.map[i][j].elevation = elevation;
-//         }
-//     }
-// }
-
-#[test]
-fn test_height_map_plot() {
-    let display_hm = create_height_map(MAP_SIZE, 2, 100.0, 2.0, 10.0, 15.0);
-    print!("{}", display_hm);
 }

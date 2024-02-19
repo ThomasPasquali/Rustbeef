@@ -39,8 +39,6 @@ impl WorldGenerator{
     }
 }
 
-// pub const MAP_SIZE: usize = 150;
-
 type World = Vec<Vec<Tile>>;
 
 impl Generator for WorldGenerator {
@@ -61,14 +59,6 @@ impl Generator for WorldGenerator {
             }
             world.push(row);
         }
-
-        // Create different elevations for each tile
-        // PARAMETERS:
-        // let amount_mountains = (MAP_SIZE/5) as u32;
-        // let scale = 60 as f32;
-        // let interpolation = 0.5;
-        // let max_variance = 30 as f32;
-        // let min_variance = 2 as f32;
 
         let height_map =
             height::create_height_map(self.map_size, self.amount_mountains, self.scale, self.interpolation, self.min_variance, self.max_variance);
