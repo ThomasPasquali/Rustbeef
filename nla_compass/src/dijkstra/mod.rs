@@ -1,19 +1,22 @@
-mod helpers;
+pub mod helpers;
 use std::hash::Hasher;
 use core::hash::Hash;
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 use self::helpers::get_cost;
 use pathfinding::prelude::{build_path, dijkstra_all};
-use robotics_lib::interface::Direction;
 use robotics_lib::world::tile::Tile;
-use crate::compass::MoveError;
-use crate::dijkstra::helpers::get_direction;
 
-#[derive(Debug)]
 pub(crate) struct Wrapper {
     pub(crate) world: Rc<Vec<Vec<Option<Tile>>>>,
     pub(crate) row: usize,
     pub(crate) col: usize
+}
+
+impl Debug for Wrapper {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{},{}]", self.row, self.col)
+    }
 }
 
 impl PartialEq for Wrapper {
@@ -38,44 +41,66 @@ impl Clone for Wrapper {
 }
 
 fn successors(node: &Wrapper) -> Vec<(Wrapper, usize)> {
-    //println!("\nHere at the start");
-    let mut row_start = node.row;
-    let mut col_start = node.col;
-    let mut row_end = node.row + 1;
-    let mut col_end = node.col + 1;
-    if row_start > 0 {
-        row_start -= 1;
-    }
-    if col_start > 0 {
-        col_start -= 1;
-    }
-    if row_end < (node.world.len()) {
-        row_end += 1;
-    }
-    if col_end < (node.world.len()) {
-        col_end += 1;
-    }
-    let mut result = Vec::new();
-    // Iterate over 3x3 adjacent tiles
+    let mut result: Vec<(Wrapper, usize)> = Vec::new();
 
-    for row in row_start..row_end {
-        for col in col_start..col_end {
-            //println!("{}{}: range {}{} - {}{}", row, col, row_start, col_start, row_end, col_end);
-            if let Some(_) = node.world.as_ref()[row][col] {
-                //println!("{}{}, is some", row, col);
-                result.push((Wrapper {
-                    world: node.world.clone(), row, col
-                }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
-                            &node.world.as_ref()[row][col].as_ref().unwrap())));
-                //println!("pushed\n");
-            }
-        };
+    // continue only if start_tile is some
+    if node.world.as_ref()[node.row][node.col].as_ref().is_none() {
+        return result;
     }
-    //println!("loop ended");
+
+
+    // left tile
+    if node.col > 0 {
+        if let Some(_) = node.world.as_ref()[node.row][node.col-1] {
+            if node.world.as_ref()[node.row][node.col-1].clone().unwrap().tile_type.properties().walk() {
+                result.push((Wrapper {
+                    world: node.world.clone(), row: node.row, col: node.col-1
+                }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
+                            &node.world.as_ref()[node.row][node.col-1].as_ref().unwrap())));
+            }
+        }
+    }
+
+    // right tile
+    if node.col < node.world.len()-1 {
+        if let Some(_) = node.world.as_ref()[node.row][node.col+1] {
+            if node.world.as_ref()[node.row][node.col+1].clone().unwrap().tile_type.properties().walk() {
+                result.push((Wrapper {
+                    world: node.world.clone(), row: node.row, col: node.col+1
+                }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
+                            &node.world.as_ref()[node.row][node.col+1].as_ref().unwrap())));
+            }
+        }
+    }
+
+    // up tile
+    if node.row > 0 {
+        if let Some(_) = node.world.as_ref()[node.row-1][node.col] {
+            if node.world.as_ref()[node.row-1][node.col].clone().unwrap().tile_type.properties().walk() {
+                result.push((Wrapper {
+                    world: node.world.clone(), row: node.row-1, col: node.col
+                }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
+                            &node.world.as_ref()[node.row-1][node.col].as_ref().unwrap())));
+            }
+        }
+    }
+
+    // down tile
+    if node.row < node.world.len()-1 {
+        if let Some(_) = node.world.as_ref()[node.row+1][node.col] {
+            if node.world.as_ref()[node.row+1][node.col].clone().unwrap().tile_type.properties().walk() {
+                result.push((Wrapper {
+                    world: node.world.clone(), row: node.row+1, col: node.col
+                }, get_cost(&node.world.as_ref()[node.row][node.col].as_ref().unwrap(),
+                            &node.world.as_ref()[node.row+1][node.col].as_ref().unwrap())));
+            }
+        }
+    }
+
     return result;
 }
 
-pub(crate) fn get_move_for_coordinate(start: (usize, usize), destination: (usize, usize), map: &Vec<Vec<Option<Tile>>>) -> Result<Direction, MoveError> {
+pub(crate) fn get_path_vector(start: (usize, usize), destination: (usize, usize), map: &Vec<Vec<Option<Tile>>>) -> Vec<Wrapper> {
     let start_wrapper = Wrapper {
         world: Rc::new(map.clone()),
         row: start.0,
@@ -88,5 +113,6 @@ pub(crate) fn get_move_for_coordinate(start: (usize, usize), destination: (usize
     };
     let reachables_from_start = dijkstra_all(&start_wrapper, successors);
     let path_start_to_dest = build_path(&destination_wrapper, &reachables_from_start);
-    get_direction(&path_start_to_dest)
+    path_start_to_dest
+    //get_direction(&path_start_to_dest)
 }
