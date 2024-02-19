@@ -2,11 +2,10 @@ use crate::utils::*;
 use crate::World;
 use std::fmt::Display;
 
-use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand::Rng;
+use rand::SeedableRng;
 use rand_distr::{Distribution, Uniform};
-
 
 /// Struct to link a position to a certain elevation.
 #[allow(dead_code)]
@@ -155,7 +154,14 @@ pub fn create_height_map(
     max_variance: f32,
 ) -> HeightMap {
     let mut gaussians = Vec::<Gaussian>::new();
-    sample_gaussians(&mut gaussians, bumpiness, scale, size, min_variance, max_variance);
+    sample_gaussians(
+        &mut gaussians,
+        bumpiness,
+        scale,
+        size,
+        min_variance,
+        max_variance,
+    );
 
     let mut height_map = height_map!(0; (size, size));
     let mut elevations = Vec::<usize>::new();

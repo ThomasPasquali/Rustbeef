@@ -13,9 +13,9 @@ use robotics_lib::world::world_generator::Generator;
 use strum::IntoEnumIterator;
 
 /// # World Generator
-/// 
+///
 /// The Endless Heights Generator generates a map with tiles of diverse elevations.
-/// 
+///
 ///  Elevations are sampled from a set of gaussians in the following way:
 /// The elevation is primarily taken to be the highest value amongst all gaussians. All other gaussians are then added to the elevation with a multiplicative of an interpolation between 0 and 1.
 /// ## Parameters
@@ -33,16 +33,38 @@ pub struct WorldGenerator {
     max_variance: f32,
     min_variance: f32,
 }
-impl WorldGenerator{
-    pub fn new(map_size: usize, amount_mountains: usize, scale: f32, interpolation: f32, max_variance: f32, min_variance: f32) -> WorldGenerator {
-        WorldGenerator{map_size, amount_mountains, scale, interpolation, max_variance, min_variance}
+impl WorldGenerator {
+    pub fn new(
+        map_size: usize,
+        amount_mountains: usize,
+        scale: f32,
+        interpolation: f32,
+        max_variance: f32,
+        min_variance: f32,
+    ) -> WorldGenerator {
+        WorldGenerator {
+            map_size,
+            amount_mountains,
+            scale,
+            interpolation,
+            max_variance,
+            min_variance,
+        }
     }
 }
 
 type World = Vec<Vec<Tile>>;
 
 impl Generator for WorldGenerator {
-    fn gen(&mut self) -> (World, (usize, usize), EnvironmentalConditions, f32, Option<HashMap<Content, f32>>) {
+    fn gen(
+        &mut self,
+    ) -> (
+        World,
+        (usize, usize),
+        EnvironmentalConditions,
+        f32,
+        Option<HashMap<Content, f32>>,
+    ) {
         let mut rng = rand::thread_rng();
         let mut world = Vec::new();
         for _ in 0..self.map_size {
@@ -60,8 +82,14 @@ impl Generator for WorldGenerator {
             world.push(row);
         }
 
-        let height_map =
-            height::create_height_map(self.map_size, self.amount_mountains, self.scale, self.interpolation, self.min_variance, self.max_variance);
+        let height_map = height::create_height_map(
+            self.map_size,
+            self.amount_mountains,
+            self.scale,
+            self.interpolation,
+            self.min_variance,
+            self.max_variance,
+        );
         height::bump_world(&mut world, height_map);
 
         (
@@ -69,7 +97,7 @@ impl Generator for WorldGenerator {
             (0, 0),
             EnvironmentalConditions::new(&[WeatherType::Sunny], 1, 1).unwrap(),
             10.0,
-            None
+            None,
         )
     }
 }
