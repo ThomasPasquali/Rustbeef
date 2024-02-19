@@ -1,20 +1,16 @@
 use crate::utils::*;
 use crate::World;
-use crate::MAP_SIZE;
 use std::fmt::Display;
 
 use rand::SeedableRng;
 use rand::rngs::StdRng;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use rand_distr::{Distribution, Uniform};
 
-// const MIN_MOUNTAIN_SIZE: Dimension = Dimension{width: 30, height: 30};
-// const MIN_VALLEY_SIZE: Dimension = Dimension{width: 30, height: 30};
-
+#[allow(dead_code)]
 struct ElevationTile {
     pos: Position,
     elevation: usize,
-    // expanded: bool
 }
 
 pub struct HeightMap(Vec<Vec<ElevationTile>>);
@@ -107,7 +103,7 @@ impl Default for Gaussian {
 
 fn sample_gaussians(
     gaussians: &mut Vec<Gaussian>,
-    bumpiness: u32,
+    bumpiness: usize,
     scale: f32,
     limit: usize,
     min_variance: f32,
@@ -116,9 +112,7 @@ fn sample_gaussians(
     let mut rng = StdRng::seed_from_u64(2);
     for _ in 0..bumpiness {
         let angle = std::f32::consts::PI * rng.gen_range(0.0..2.0);
-        // if stretch <= wideness {
-        //     wideness = stretch - 0.5
-        // }
+
         let uniform_sigma = Uniform::<f32>::from(min_variance..max_variance);
         let uniform_mean = Uniform::<f32>::from(0.0..limit as f32);
         let mean_x = uniform_mean.sample(&mut rng);
@@ -141,9 +135,13 @@ fn sample_gaussians(
         ));
     }
 }
+
+/// Creates a square map of elevation tiles.
+/// 
+#[allow(unused_assignments)]
 pub fn create_height_map(
     size: usize,
-    bumpiness: u32,
+    bumpiness: usize,
     scale: f32,
     interpolation: f32,
     min_variance: f32,
@@ -169,6 +167,7 @@ pub fn create_height_map(
             // Taking max value for each position
             gaussian_values.sort();
             elevation = gaussian_values[gaussian_values.len() - 1];
+
             // Adding some value of each other gaussian
             for v in 0..gaussian_values.len() - 1 {
                 elevation += (interpolation * v as f32) as usize;
@@ -192,8 +191,8 @@ pub fn create_height_map(
 }
 
 pub fn bump_world(world: &mut World, height_map: HeightMap) {
-    for i in 0..MAP_SIZE {
-        for j in 0..MAP_SIZE {
+    for i in 0..height_map.0.len() {
+        for j in 0..height_map.0.len() {
             world[i][j].elevation = height_map.0[i][j].elevation;
         }
     }
